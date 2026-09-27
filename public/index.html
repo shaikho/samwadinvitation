@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>سمير ووعد · دعوة زفاف</title>
+  <meta name="description" content="Sameer & Waad · 20 October 2026 · Mountain Rose Hotel" />
+  <meta name="theme-color" content="#f4eee3" />
+  <meta property="og:title" content="Sameer & Waad · سمير ووعد" />
+  <meta property="og:description" content="20 · 10 · 2026 — Mountain Rose Hotel" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%239e3b4a'/%3E%3Ctext x='32' y='41' font-size='24' text-anchor='middle' fill='%23f6e7c8' font-family='serif'%3ES%26W%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Pinyon+Script&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="is-locked">
+
+  <!-- Shared SVG definitions: embroidery texture, linen weave, pearls -->
+  <svg class="svg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="emb" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="4" result="n" />
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G" result="d" />
+        <feDropShadow in="d" dx="0" dy="0.9" stdDeviation="0.6" flood-color="#5b4a3a" flood-opacity="0.35" />
+      </filter>
+      <pattern id="linen" width="6" height="6" patternUnits="userSpaceOnUse">
+        <rect width="6" height="6" fill="#f7f1e6" />
+        <path d="M0 1.5H6M0 4.5H6" stroke="#ebe2d1" stroke-width=".7" />
+        <path d="M1.5 0V6M4.5 0V6" stroke="#efe7d8" stroke-width=".5" />
+      </pattern>
+      <radialGradient id="pearl" cx="35%" cy="30%" r="75%">
+        <stop offset="0" stop-color="#ffffff" />
+        <stop offset=".55" stop-color="#f1e9df" />
+        <stop offset="1" stop-color="#cfc1b0" />
+      </radialGradient>
+      <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#e3cb93" />
+        <stop offset=".5" stop-color="#b8975f" />
+        <stop offset="1" stop-color="#8e7040" />
+      </linearGradient>
+      <radialGradient id="waxGrad" cx="40%" cy="35%" r="70%">
+        <stop offset="0" stop-color="#c25a68" />
+        <stop offset=".6" stop-color="#9e3b4a" />
+        <stop offset="1" stop-color="#6e2230" />
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <!-- 3D gyro / pointer driven background -->
+  <div class="scene" aria-hidden="true">
+    <div class="layer layer-linen"></div>
+    <div class="layer layer-far" data-depth="0.25"></div>
+    <div class="layer layer-mid" data-depth="0.6"></div>
+    <div class="layer layer-near" data-depth="1.1"></div>
+  </div>
+  <canvas class="petals" aria-hidden="true"></canvas>
+  <div class="birds" aria-hidden="true"></div>
+
+  <!-- Opening gate -->
+  <div class="gate" role="dialog" aria-modal="true">
+    <div class="door door-left"><div class="door-inner"></div></div>
+    <div class="door door-right"><div class="door-inner"></div></div>
+    <button class="seal" type="button" aria-label="Open invitation">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <path d="M100 8c14 0 18 9 30 12s22-2 30 8 4 20 10 30 14 16 12 30-12 16-14 28 6 22-4 32-22 6-32 12-14 18-30 18-20-10-32-14-24 2-32-8-4-22-10-32-14-14-12-28 12-18 14-30-4-22 6-30 20-2 30-8S86 8 100 8z" fill="url(#waxGrad)" />
+        <circle cx="100" cy="100" r="66" fill="none" stroke="#e6b4a0" stroke-opacity=".45" stroke-width="2" />
+        <circle cx="100" cy="100" r="58" fill="none" stroke="#5a1a26" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="2 4" />
+        <text x="100" y="118" text-anchor="middle" class="seal-text">S&amp;W</text>
+      </svg>
+    </button>
+    <div class="gate-copy">
+      <p class="gate-tap" data-i18n="gate.tap"></p>
+      <p class="gate-sub" data-i18n="gate.sub"></p>
+    </div>
+  </div>
+
+  <!-- Top controls -->
+  <header class="controls">
+    <button class="pill" id="langToggle" type="button" data-i18n="ui.lang"></button>
+    <button class="pill icon" id="musicToggle" type="button" aria-pressed="true" data-i18n-aria="ui.music">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path class="note" d="M9 18V6l10-2v12" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="16.5" cy="16" r="2.5" /><path class="slash" d="M4 4l16 16" /></svg>
+      <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+    </button>
+  </header>
+
+  <main>
+    <!-- 1 · Welcome -->
+    <section class="slide hero" id="welcome">
+      <div class="monogram tilt">
+        <div class="wreath" data-art="wreath"></div>
+        <div class="letters" aria-label="S & W">
+          <span class="l l-s">S</span><span class="l l-amp">&amp;</span><span class="l l-w">W</span>
+        </div>
+      </div>
+      <p class="kicker" data-reveal data-i18n="hero.kicker"></p>
+      <h1 class="display" data-reveal data-i18n="hero.title"></h1>
+      <div class="divider" data-art="divider" data-reveal></div>
+      <p class="lead" data-reveal data-i18n="hero.text"></p>
+      <div class="scroll-cue" data-reveal><span data-i18n="ui.scroll"></span><i></i></div>
+    </section>
+
+    <!-- 2 · Countdown -->
+    <section class="slide countdown" id="countdown">
+      <div class="charms" aria-hidden="true"></div>
+      <div class="count-inner">
+        <p class="kicker" data-reveal data-i18n="count.kicker"></p>
+        <h2 class="display" data-reveal data-i18n="count.title"></h2>
+        <div class="divider" data-art="divider" data-reveal></div>
+        <div class="clock" data-reveal>
+          <div class="unit"><div class="hoop"><span class="num" data-unit="days">00</span></div><span class="label" data-i18n="count.days"></span></div>
+          <div class="unit"><div class="hoop"><span class="num" data-unit="hours">00</span></div><span class="label" data-i18n="count.hours"></span></div>
+          <div class="unit"><div class="hoop"><span class="num" data-unit="minutes">00</span></div><span class="label" data-i18n="count.minutes"></span></div>
+          <div class="unit"><div class="hoop"><span class="num" data-unit="seconds">00</span></div><span class="label" data-i18n="count.seconds"></span></div>
+        </div>
+        <p class="count-date" data-reveal data-i18n="count.date"></p>
+      </div>
+    </section>
+
+    <!-- 3 · Invitation -->
+    <section class="slide invite" id="invitation">
+      <div class="sprig sprig-a" data-art="sprig"></div>
+      <div class="sprig sprig-b" data-art="sprig"></div>
+      <div class="invite-card">
+        <p class="basmala" data-reveal data-i18n="invite.basmala"></p>
+        <p class="verse" data-reveal data-i18n="invite.verse"></p>
+        <p class="kicker" data-reveal data-i18n="invite.together"></p>
+        <div class="families" data-reveal>
+          <p data-i18n="invite.groomFamily"></p>
+          <span class="fam-dot" aria-hidden="true">✦</span>
+          <p data-i18n="invite.brideFamily"></p>
+        </div>
+        <p class="honour" data-reveal data-i18n="invite.honour"></p>
+        <div class="couple">
+          <p class="role" data-reveal data-i18n="invite.groomLabel"></p>
+          <p class="name" data-reveal data-i18n="invite.groom"></p>
+          <p class="and" data-reveal data-i18n="invite.and"></p>
+          <p class="role" data-reveal data-i18n="invite.brideLabel"></p>
+          <p class="name" data-reveal data-i18n="invite.bride"></p>
+        </div>
+        <div class="divider" data-art="divider" data-reveal></div>
+        <p class="celebrate" data-reveal data-i18n="invite.celebrate"></p>
+        <p class="invite-date" data-reveal data-i18n="invite.date"></p>
+        <p class="date-num" data-reveal>20 · 10 · 2026</p>
+      </div>
+    </section>
+
+    <!-- 4 · Location, date & time -->
+    <section class="slide venue" id="venue">
+      <div class="frame tilt" data-reveal-frame>
+        <div class="frame-art" data-art="frame"></div>
+        <div class="frame-content">
+          <h2 class="display" data-i18n="venue.title"></h2>
+          <p class="kicker" data-i18n="venue.kicker"></p>
+          <p class="venue-name" data-i18n="venue.name"></p>
+          <p class="venue-place" data-i18n="venue.place"></p>
+          <p class="venue-date" data-i18n="venue.date"></p>
+          <p class="venue-time" data-i18n="venue.doors"></p>
+          <p class="venue-time" data-i18n="venue.party"></p>
+          <div class="venue-actions">
+            <a class="link-btn" id="directionsBtn" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z" /><circle cx="12" cy="9" r="2.5" /></svg>
+              <span data-i18n="venue.directions"></span>
+            </a>
+            <a class="link-btn" id="googleCalBtn" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
+              <span data-i18n="venue.google"></span>
+            </a>
+            <a class="link-btn" href="/wedding.ics">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4M12 13v5M9.5 15.5h5" /></svg>
+              <span data-i18n="venue.ical"></span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 · Our story -->
+    <section class="slide story" id="story">
+      <div class="arch tilt">
+        <div class="arch-art" data-art="arch"></div>
+        <div class="arch-content">
+          <h2 class="display" data-reveal data-i18n="story.title"></h2>
+          <div class="divider small" data-art="divider" data-reveal></div>
+          <p class="story-text" data-reveal data-i18n="story.text"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 · Timeline -->
+    <section class="slide timeline" id="timeline">
+      <h2 class="display" data-reveal data-i18n="timeline.title"></h2>
+      <div class="divider" data-art="divider" data-reveal></div>
+      <ol class="tl">
+        <li class="tl-line" aria-hidden="true"><span class="tl-fill"></span><span class="tl-pearl"></span></li>
+        <li class="tl-item"><div class="tl-icon" data-icon="doors"></div><div class="tl-text"><time data-i18n="timeline.t1"></time><p data-i18n="timeline.e1"></p></div></li>
+        <li class="tl-item"><div class="tl-icon" data-icon="dinner"></div><div class="tl-text"><time data-i18n="timeline.t2"></time><p data-i18n="timeline.e2"></p></div></li>
+        <li class="tl-item"><div class="tl-icon" data-icon="cake"></div><div class="tl-text"><time data-i18n="timeline.t3"></time><p data-i18n="timeline.e3"></p></div></li>
+        <li class="tl-item"><div class="tl-icon" data-icon="farewell"></div><div class="tl-text"><time data-i18n="timeline.t4"></time><p data-i18n="timeline.e4"></p></div></li>
+      </ol>
+    </section>
+
+    <!-- 7 · RSVP -->
+    <section class="slide rsvp" id="rsvp">
+      <div class="envelope" data-reveal aria-hidden="true">
+        <svg viewBox="0 0 160 110">
+          <g filter="url(#emb)">
+            <rect x="8" y="14" width="144" height="88" rx="4" fill="#f3ebdd" stroke="#dccfb8" />
+            <path d="M8 18l72 50 72-50" fill="#ece2d0" stroke="#dccfb8" />
+            <path d="M8 102l56-42M152 102l-56-42" stroke="#dccfb8" fill="none" />
+          </g>
+          <g transform="translate(80 66)">
+            <circle r="15" fill="url(#waxGrad)" />
+            <circle r="11" fill="none" stroke="#e6b4a0" stroke-opacity=".5" />
+            <text y="4" text-anchor="middle" class="seal-text small">S&amp;W</text>
+          </g>
+        </svg>
+      </div>
+      <h2 class="display" data-reveal data-i18n="rsvp.title"></h2>
+      <p class="kicker" data-reveal data-i18n="rsvp.kicker"></p>
+      <div class="divider" data-art="divider" data-reveal></div>
+      <form class="rsvp-form" id="rsvpForm" data-reveal novalidate>
+        <label for="guestName" data-i18n="rsvp.label"></label>
+        <input id="guestName" name="name" type="text" autocomplete="name" maxlength="120" required data-i18n-ph="rsvp.placeholder" />
+        <button class="btn" type="submit"><span data-i18n="rsvp.submit"></span></button>
+        <p class="form-msg" role="status" aria-live="polite"></p>
+      </form>
+      <div class="rsvp-done" hidden>
+        <p class="thanks"></p>
+        <button class="link-btn plain" type="button" id="rsvpAgain"><span data-i18n="rsvp.another"></span></button>
+      </div>
+      <footer class="foot" data-reveal>
+        <div class="foot-mono">S <span>&amp;</span> W</div>
+        <p data-i18n="footer.line"></p>
+        <p class="date-num">20 · 10 · 2026</p>
+      </footer>
+    </section>
+  </main>
+
+  <script src="/vendor/motion.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/art.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

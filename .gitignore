@@ -1,0 +1,4 @@
+node_modules/
+data/attendees.json
+.DS_Store
+Thumbs.db
