@@ -1,6 +1,8 @@
-// Renders public/share-card.html to public/og-image.jpg (the WhatsApp / social link preview).
+// Captures public/og-image.jpg, the WhatsApp / X / iMessage link preview (1200×630).
 // Needs the local server running (npm start) and Microsoft Edge or Google Chrome installed.
-//   npm run og            (or: BROWSER="path/to/chrome" npm run og)
+//   npm run og            → screenshot of the site's welcome screen (/?snapshot)
+//   npm run og -- card    → the designed bilingual card (public/share-card.html)
+//   BROWSER="path/to/chrome" npm run og   to pick a specific browser
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const os = require('os');
@@ -22,17 +24,26 @@ if (!browser) {
   process.exit(1);
 }
 
-const url = `http://localhost:${process.env.PORT || 3000}/share-card.html`;
+const mode = process.argv[2] === 'card' ? 'card' : 'hero';
+const base = `http://localhost:${process.env.PORT || 3000}`;
+const url = mode === 'card' ? `${base}/share-card.html` : `${base}/?snapshot`;
+// The hero is laid out at a desktop size (1800×945) and scaled down to 1200×630.
+const [w, h, dsf] = mode === 'card' ? [1200, 630, 1] : [1800, 945, 2 / 3];
 const out = path.join(__dirname, '..', 'public', 'og-image.jpg');
 const tmp = path.join(os.tmpdir(), 'samwad-og.jpeg');
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'samwad-og-'));
+fs.rmSync(tmp, { force: true });
 
 execFileSync(browser, [
   '--headless=new', '--disable-gpu', '--hide-scrollbars',
-  '--force-device-scale-factor=1', '--window-size=1200,630',
-  '--virtual-time-budget=8000', `--user-data-dir=${profile}`,
+  `--force-device-scale-factor=${dsf}`, `--window-size=${w},${h}`,
+  '--virtual-time-budget=9000', `--user-data-dir=${profile}`,
   `--screenshot=${tmp}`, url,
 ], { stdio: 'ignore' });
 
+if (!fs.existsSync(tmp)) {
+  console.error('The browser did not produce a screenshot. Is the server running (npm start)?');
+  process.exit(1);
+}
 fs.copyFileSync(tmp, out);
 console.log(`og-image.jpg written (${Math.round(fs.statSync(out).size / 1024)} KB)`);

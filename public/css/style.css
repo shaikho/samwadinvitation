@@ -457,6 +457,12 @@ main { position: relative; z-index: 2; }
 .sway:nth-child(3n+1) { animation-duration: 3.9s; animation-delay: -2.4s; }
 @keyframes sway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
 
+/* link-preview capture (npm run og) */
+.snapshot .controls, .snapshot .scroll-cue { display: none !important; }
+.snapshot [data-reveal], .snapshot .wreath svg, .snapshot .letters .l { opacity: 1 !important; filter: none !important; }
+.snapshot [data-reveal], .snapshot .letters .l { transform: none !important; }
+.snapshot .bird .wing, .snapshot .bird .wing-back { animation: none; }
+
 /* ---------------- reveal defaults (JS animates in) ---------------- */
 .js [data-reveal] { opacity: 0; }
 .js .wreath svg, .js .letters .l { opacity: 0; }

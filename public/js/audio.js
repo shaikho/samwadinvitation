@@ -3,10 +3,26 @@
 // a soft generated music-box melody plays instead.
 (function () {
   const SONG_URL = 'audio/song.mp3';
-  const MIN_LEVEL = 0.05; // at the top of the page
+  const MIN_LEVEL = 0.1;  // at the top of the page (quiet, but audible)
   const MAX_LEVEL = 0.7;  // at the bottom of the page
 
-  let ctx, master, started = false, muted = false, level = MIN_LEVEL, synth = null;
+  let ctx, master, el, started = false, muted = false, level = MIN_LEVEL, synth = null;
+
+  // iPhone: Web Audio is silenced by the ring/silent switch unless the page declares it
+  // is playing media (Safari 16.4+).
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch { /* unsupported */ }
+
+  // Pause when the guest switches apps/tabs, resume when they come back.
+  document.addEventListener('visibilitychange', () => {
+    if (!started) return;
+    if (document.hidden) {
+      if (el) el.pause();
+      if (ctx) ctx.suspend();
+    } else if (!muted) {
+      if (ctx) ctx.resume();
+      if (el && !synth) el.play().catch(() => {});
+    }
+  });
 
   function applyGain() {
     if (!master) return;
@@ -26,7 +42,7 @@
     master.connect(ctx.destination);
     ctx.resume();
 
-    const el = new Audio();
+    el = new Audio();
     el.loop = true;
     el.preload = 'auto';
     el.playsInline = true;
@@ -116,7 +132,10 @@
     toggle() {
       if (!started) { start(); muted = false; applyGain(); return muted; }
       muted = !muted;
-      if (!muted && ctx.state === 'suspended') ctx.resume();
+      if (!muted) {
+        if (ctx.state !== 'running') ctx.resume();
+        if (el && el.paused && !synth) el.play().catch(() => {});
+      }
       applyGain();
       return muted;
     },

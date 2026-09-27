@@ -219,7 +219,11 @@
       for (let i = 0; i < ambient; i++) spawn({ y: Math.random() * H, a: 0 });
       requestAnimationFrame(frame);
     }
-    return { start, burst: reduced ? () => {} : burst };
+    // fully visible petals spread over the screen (used for the link-preview capture)
+    function scatter(n) {
+      for (let i = 0; i < n; i++) spawn({ y: Math.random() * H, a: 1, vy: .05, vx: 0 });
+    }
+    return { start, scatter, burst: reduced ? () => {} : burst };
   })();
 
   // ---------------------------------------------------------------- little blue birds
@@ -592,4 +596,23 @@
   });
 
   applyLang();
+
+  // ---------------------------------------------------------------- ?snapshot
+  // Used by `npm run og` to capture the link-preview image: no gate, no controls,
+  // hero fully revealed with petals and a flock of birds.
+  if (new URLSearchParams(location.search).has('snapshot')) {
+    document.documentElement.classList.add('snapshot');
+    $('.gate').remove();
+    document.body.classList.remove('is-locked');
+    // final states only (CSS .snapshot rules) so the capture never lands mid-animation
+    Petals.start();
+    Petals.scatter(38);
+    [[.11, .15, .7], [.15, .19, .55], [.12, .2, .5], [.155, .245, .75], [.18, .19, .8], [.155, .29, .7]].forEach(([x, y, sc]) => {
+      const b = document.createElement('div');
+      b.className = 'bird';
+      b.innerHTML = BIRD;
+      b.style.transform = `translate(${innerWidth * x}px, ${innerHeight * y}px) scale(${sc})`;
+      $('.birds').appendChild(b);
+    });
+  }
 })();
