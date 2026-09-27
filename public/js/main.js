@@ -36,6 +36,7 @@
     $$('[data-i18n-aria]').forEach((el) => { el.setAttribute('aria-label', t(el.dataset.i18nAria)); });
     updateCalendarLinks();
     renderCountdown(true);
+    if (typeof centerAll === 'function') fontsReady.then(centerAll);
   }
 
   $('#langToggle').addEventListener('click', async () => {
@@ -283,7 +284,8 @@
     ];
     const use = isSmall ? specs.filter((_, i) => i % 2 === 0 || i === 3 || i === 5) : specs;
     use.forEach(([left, L, shape], i) => {
-      const h = Math.round(L * (isSmall ? .7 : 1));
+      // keep the longest charm clear of the (vertically centred) countdown
+      const h = Math.round(L * Math.min(1, (innerHeight * .19) / 185));
       let beads = '';
       for (let y = 14; y < h - 8; y += 16) beads += `<circle cx="20" cy="${y}" r="${i % 2 ? 2.4 : 1.8}" fill="url(#pearl)"/>`;
       const holder = document.createElement('div');
@@ -315,11 +317,11 @@
       days: Math.floor(diff / 864e5),
       hours: Math.floor((diff % 864e5) / 36e5),
       minutes: Math.floor((diff % 36e5) / 6e4),
-      seconds: Math.floor((diff % 6e4) / 1e3),
     };
     for (const k in parts) {
       if (!force && prev[k] === parts[k]) continue;
       nums[k].textContent = fmt(parts[k]);
+      centerInk(nums[k]);
       if (!force && !reduced && prev[k] !== undefined) {
         animate(nums[k], { y: [-12, 0], opacity: [0, 1], scale: [1.15, 1] }, { duration: .45, ease: EASE });
       }
@@ -328,6 +330,93 @@
     if (diff === 0) $('.count-date').textContent = t('count.done');
   }
   setInterval(renderCountdown, 1000);
+
+  // ---------------------------------------------------------------- optical centring
+  // Script fonts and Arabic digits carry uneven side bearings and vertical metrics, so
+  // CSS centring of the text *box* leaves the visible glyphs off-centre. These helpers
+  // measure the actual ink with canvas and correct for it.
+  const mctx = document.createElement('canvas').getContext('2d');
+  function inkMetrics(el, text) {
+    const cs = getComputedStyle(el);
+    mctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const m = mctx.measureText(text);
+    const size = parseFloat(cs.fontSize);
+    const fa = m.fontBoundingBoxAscent ?? size * .8;
+    const fd = m.fontBoundingBoxDescent ?? size * .2;
+    return {
+      size, adv: m.width,
+      l: -m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight,
+      t: -m.actualBoundingBoxAscent, b: m.actualBoundingBoxDescent,
+      base: (size - (fa + fd)) / 2 + fa, // baseline inside a line-height:1 box
+    };
+  }
+  function centerInk(el) {
+    const m = inkMetrics(el, el.textContent);
+    const dx = m.adv / 2 - (m.l + m.r) / 2;
+    const dy = m.size / 2 - (m.base + (m.t + m.b) / 2);
+    el.style.translate = `${dx.toFixed(1)}px ${dy.toFixed(1)}px`;
+  }
+  function layoutMonogram(box) {
+    const spans = $$('.l', box);
+    const W = box.clientWidth, H = box.clientHeight;
+    if (!W || !H) return;
+    const isAmp = spans.map((sp) => sp.classList.contains('l-amp'));
+    const [fitW, fitH] = (box.dataset.fit || '0.9,0.9').split(',').map(Number);
+    let ms, xs, x, gap, top, bot;
+    const measure = () => {
+      ms = spans.map((sp) => inkMetrics(sp, sp.textContent));
+      gap = ms[0].size * .04;
+      xs = [];
+      x = 0;
+      ms.forEach((m) => { const ox = x - m.l; xs.push(ox); x = ox + m.r + gap; });
+      const letters = ms.filter((_, i) => !isAmp[i]);
+      top = Math.min(...letters.map((m) => m.t));
+      bot = Math.max(...letters.map((m) => m.b));
+    };
+    // shrink the whole monogram until its ink fits the space (script swashes are wide)
+    box.style.fontSize = '';
+    measure();
+    const scale = Math.min(1, (W * fitW) / (x - gap), (H * fitH) / (bot - top));
+    if (scale < 1) {
+      box.style.fontSize = `${(parseFloat(getComputedStyle(box).fontSize) * scale).toFixed(2)}px`;
+      measure();
+    }
+    const startX = (W - (x - gap)) / 2;
+    const sharedBase = H / 2 - (top + bot) / 2; // S and W share one baseline
+    ms.forEach((m, i) => {
+      const baseline = isAmp[i] ? H / 2 - (m.t + m.b) / 2 : sharedBase; // & sits on the optical centre
+      spans[i].style.left = `${(startX + xs[i]).toFixed(1)}px`;
+      spans[i].style.top = `${(baseline - m.base).toFixed(1)}px`;
+    });
+    box.classList.add('is-laid-out');
+  }
+  function centerSvgText(el) {
+    const [cx, cy] = el.dataset.centerInk.split(',').map(Number);
+    el.style.fontSize = '';
+    let m = inkMetrics(el, el.textContent);
+    const fit = Number(el.dataset.fit);
+    const w = m.r - m.l, hgt = m.b - m.t;
+    if (fit && Math.max(w, hgt) > fit) {
+      el.style.fontSize = `${(m.size * fit / Math.max(w, hgt)).toFixed(2)}px`;
+      m = inkMetrics(el, el.textContent);
+    }
+    el.setAttribute('text-anchor', 'start');
+    el.setAttribute('x', (cx - (m.l + m.r) / 2).toFixed(1));
+    el.setAttribute('y', (cy - (m.t + m.b) / 2).toFixed(1));
+  }
+  function centerAll() {
+    $$('[data-monogram]').forEach(layoutMonogram);
+    $$('[data-center-ink]').forEach(centerSvgText);
+    $$('.num').forEach(centerInk);
+  }
+  const fontsReady = Promise.all([
+    document.fonts.load('60px Armelie'),
+    document.fonts.load('40px "Cormorant Garamond"'),
+    document.fonts.load('40px Amiri', '٠١٢٣'),
+  ]).catch(() => {}).then(() => document.fonts.ready);
+  fontsReady.then(centerAll);
+  let resizeTimer;
+  addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(centerAll, 120); });
 
   // ---------------------------------------------------------------- calendar & maps
   function updateCalendarLinks() {

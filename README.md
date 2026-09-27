@@ -43,8 +43,21 @@ All artwork is generated SVG (`public/js/art.js`), so there are no image files t
 All text, in both languages, is in `public/js/i18n.js`: names, families, story, timeline items, RSVP deadline.
 The wedding time, the venue coordinates and the calendar event are in `public/js/main.js` (`WEDDING`, `VENUE`, `updateCalendarLinks`) and `server.js` (`/wedding.ics`).
 
-## Hosting
+## Hosting on Vercel
 
-The site needs a Node host with a persistent disk, because RSVPs are written to a file.
-Render (with a disk), Railway, Fly.io or any VPS all work.
-Serverless hosts (Vercel/Netlify functions) will **lose** the RSVP file between requests.
+- `public/` is served as static files (`vercel.json` → `outputDirectory`). `/attendees` and `/addendies` are rewrites.
+- `api/rsvp.js` and `api/attendees.js` run as serverless functions and share `lib/store.js` with the local server.
+- Vercel's filesystem is read-only, so RSVPs are stored in **Vercel Blob**:
+  1. Vercel dashboard → your project → **Storage** → **Create** → **Blob** → connect it to this project.
+     This adds the `BLOB_READ_WRITE_TOKEN` environment variable.
+  2. Redeploy.
+
+  Without the Blob store, the RSVP button shows an error on the live site.
+- Locally (no token) RSVPs go to `data/attendees.json`.
+- `public/vendor/motion.js` is a committed copy of the Motion bundle, because Vercel doesn't serve `node_modules`.
+  After upgrading `motion`, run `npm run vendor` to refresh it.
+
+## Fonts
+
+The monogram, seal and English script names use **Armelie** (`public/fonts/Armelie-Regular.otf`, from 1001fonts.com).
+Its licence is **free for personal use only**; commercial use needs a licence from brandsemut.com.

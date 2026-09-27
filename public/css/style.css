@@ -1,3 +1,9 @@
+@font-face {
+  font-family: 'Armelie';
+  src: url('../fonts/Armelie-Regular.otf') format('opentype');
+  font-display: block;
+}
+
 :root {
   --linen: #f4eee3;
   --linen-2: #efe7d8;
@@ -14,7 +20,7 @@
 
   --f-display: 'Cormorant Garamond', 'Amiri', serif;
   --f-caps: 'Cinzel', 'Amiri', serif;
-  --f-script: 'Pinyon Script', 'Aref Ruqaa', cursive;
+  --f-script: 'Armelie', 'Aref Ruqaa', cursive;
   --f-body: 'Cormorant Garamond', 'Amiri', serif;
 
   --gutter: 16px;
@@ -125,7 +131,7 @@ body.is-locked { overflow: hidden; height: 100svh; }
   -webkit-tap-highlight-color: transparent;
 }
 .seal svg { width: 100%; height: 100%; display: block; }
-.seal-text { font-family: 'Pinyon Script', cursive; font-size: 48px; fill: #f3d9c4; opacity: .95; }
+.seal-text { direction: ltr; unicode-bidi: isolate; font-family: 'Armelie', cursive; font-size: 48px; fill: #f3d9c4; opacity: .95; }
 .seal-text.small { font-size: 13px; }
 .seal:focus-visible { outline: 2px solid #fff; outline-offset: 6px; border-radius: 50%; }
 .gate-copy {
@@ -201,15 +207,21 @@ main { position: relative; z-index: 2; }
   transform-style: preserve-3d;
 }
 .wreath, .wreath svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Monograms: JS (layoutMonograms) places each glyph by its measured ink, so script
+   swashes can't pull the letters off-centre. The flex layout is only the fallback. */
+[data-monogram] {
+  display: flex; align-items: center; justify-content: center;
+  direction: ltr; white-space: nowrap; line-height: 1;
+}
+[data-monogram] .l { display: inline-block; line-height: 1; }
+[data-monogram].is-laid-out .l { position: absolute; left: 0; top: 0; margin: 0; }
+[data-monogram] .l-amp { font-size: .62em; color: var(--gold); margin: 0 .12em; }
 .letters {
-  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  font-family: 'Pinyon Script', cursive; color: #5d5a45;
-  font-size: min(18vw, 11svh, 92px); line-height: 1;
-  direction: ltr;
+  position: absolute; inset: 0;
+  font-family: 'Armelie', cursive; color: #5d5a45;
+  font-size: min(20vw, 12svh, 100px);
   transform: translateZ(40px);
 }
-.letters .l { display: inline-block; }
-.letters .l-amp { font-size: .55em; color: var(--gold); margin: 0 .08em; transform: translateY(.1em); }
 .scroll-cue {
   margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 6px;
   font-family: var(--f-caps); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--sage-dark);
@@ -222,15 +234,16 @@ main { position: relative; z-index: 2; }
 .charms { position: absolute; inset: 0 0 auto 0; height: 46%; pointer-events: none; }
 .charm { position: absolute; top: -4px; transform-origin: top center; will-change: transform; }
 .charm svg { display: block; overflow: visible; }
-.count-inner { position: relative; z-index: 1; margin-top: 18svh; }
+.count-inner { position: relative; z-index: 1; width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .clock {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: clamp(8px, 3vw, 22px); margin: 10px auto 4px;
-  width: min(100%, 560px);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-items: center; align-items: start;
+  gap: clamp(14px, 5vw, 32px); margin: 14px auto 4px;
+  width: min(100%, 420px);
 }
-.unit { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.unit { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 10px; text-align: center; }
 .hoop {
-  position: relative; width: 100%; max-width: 118px; aspect-ratio: 1; border-radius: 50%;
+  position: relative; width: 100%; max-width: 124px; aspect-ratio: 1; border-radius: 50%;
   display: grid; place-items: center;
   background:
     repeating-linear-gradient(0deg, rgba(160,140,110,.07) 0 1px, transparent 1px 3px),
@@ -247,12 +260,13 @@ main { position: relative; z-index: 2; }
   border-radius: 2px; background: linear-gradient(#e3cb93, #8e7040);
 }
 .num {
+  /* centred by its measured ink in JS (centerInk) via the independent translate property */
   font-family: 'Cormorant Garamond', serif; font-weight: 500;
-  font-size: clamp(26px, 8vw, 46px); color: #5d5a45; line-height: 1;
-  display: inline-block; font-variant-numeric: tabular-nums;
+  font-size: clamp(32px, 10vw, 52px); color: #5d5a45; line-height: 1;
+  display: block; text-align: center; white-space: nowrap; font-variant-numeric: lining-nums tabular-nums;
 }
 :lang(ar) .num { font-family: 'Amiri', serif; }
-.label { font-family: var(--f-caps); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--sage-dark); }
+.label { display: block; width: 100%; text-align: center; font-family: var(--f-caps); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--sage-dark); }
 :lang(ar) .label { letter-spacing: 0; font-size: 16px; }
 .count-date { margin: 18px 0 0; font-style: italic; color: var(--ink-soft); }
 :lang(ar) .count-date { font-style: normal; }
@@ -434,8 +448,7 @@ main { position: relative; z-index: 2; }
 
 .foot { margin-top: auto; padding-top: 48px; color: var(--ink-soft); }
 .foot p { margin: 0; }
-.foot-mono { font-family: 'Pinyon Script', cursive; font-size: 46px; color: #5d5a45; line-height: 1.2; direction: ltr; }
-.foot-mono span { color: var(--gold); font-size: .6em; }
+.foot-mono { position: relative; width: 100%; height: 76px; font-family: 'Armelie', cursive; font-size: 50px; color: #5d5a45; }
 
 /* ---------------- svg art helpers ---------------- */
 .bloom { transform-box: fill-box; transform-origin: center; }

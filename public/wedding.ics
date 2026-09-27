@@ -1,0 +1,21 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Sameer & Waad//Wedding//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:sameer-waad-wedding-20261020@samwad
+DTSTAMP:20260901T000000Z
+DTSTART:20261020T160000Z
+DTEND:20261020T220000Z
+SUMMARY:Sameer & Waad Wedding · زفاف سمير ووعد
+LOCATION:Mountain Rose Hotel\, 6th of October City\, Giza\, Egypt
+GEO:29.9310476;30.9494757
+DESCRIPTION:Doors open 7:00 PM · Celebration 8:00 PM\nhttps://www.google.com/maps/dir/?api=1&destination=29.9310476,30.9494757
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:Sameer & Waad wedding tomorrow
+END:VALARM
+END:VEVENT
+END:VCALENDAR

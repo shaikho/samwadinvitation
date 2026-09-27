@@ -11,7 +11,8 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%239e3b4a'/%3E%3Ctext x='32' y='41' font-size='24' text-anchor='middle' fill='%23f6e7c8' font-family='serif'%3ES%26W%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Pinyon+Script&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+  <link rel="preload" href="fonts/Armelie-Regular.otf" as="font" type="font/otf" crossorigin />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body class="is-locked">
@@ -66,7 +67,7 @@
         <path d="M100 8c14 0 18 9 30 12s22-2 30 8 4 20 10 30 14 16 12 30-12 16-14 28 6 22-4 32-22 6-32 12-14 18-30 18-20-10-32-14-24 2-32-8-4-22-10-32-14-14-12-28 12-18 14-30-4-22 6-30 20-2 30-8S86 8 100 8z" fill="url(#waxGrad)" />
         <circle cx="100" cy="100" r="66" fill="none" stroke="#e6b4a0" stroke-opacity=".45" stroke-width="2" />
         <circle cx="100" cy="100" r="58" fill="none" stroke="#5a1a26" stroke-opacity=".35" stroke-width="1.5" stroke-dasharray="2 4" />
-        <text x="100" y="118" text-anchor="middle" class="seal-text">S&amp;W</text>
+        <text x="100" y="118" text-anchor="middle" class="seal-text" data-center-ink="100,100" data-fit="104">S&amp;W</text>
       </svg>
     </button>
     <div class="gate-copy">
@@ -89,7 +90,7 @@
     <section class="slide hero" id="welcome">
       <div class="monogram tilt">
         <div class="wreath" data-art="wreath"></div>
-        <div class="letters" aria-label="S & W">
+        <div class="letters" data-monogram data-fit="0.64,0.44" aria-label="S & W">
           <span class="l l-s">S</span><span class="l l-amp">&amp;</span><span class="l l-w">W</span>
         </div>
       </div>
@@ -111,7 +112,6 @@
           <div class="unit"><div class="hoop"><span class="num" data-unit="days">00</span></div><span class="label" data-i18n="count.days"></span></div>
           <div class="unit"><div class="hoop"><span class="num" data-unit="hours">00</span></div><span class="label" data-i18n="count.hours"></span></div>
           <div class="unit"><div class="hoop"><span class="num" data-unit="minutes">00</span></div><span class="label" data-i18n="count.minutes"></span></div>
-          <div class="unit"><div class="hoop"><span class="num" data-unit="seconds">00</span></div><span class="label" data-i18n="count.seconds"></span></div>
         </div>
         <p class="count-date" data-reveal data-i18n="count.date"></p>
       </div>
@@ -212,7 +212,7 @@
           <g transform="translate(80 66)">
             <circle r="15" fill="url(#waxGrad)" />
             <circle r="11" fill="none" stroke="#e6b4a0" stroke-opacity=".5" />
-            <text y="4" text-anchor="middle" class="seal-text small">S&amp;W</text>
+            <text y="4" text-anchor="middle" class="seal-text small" data-center-ink="0,0" data-fit="17">S&amp;W</text>
           </g>
         </svg>
       </div>
@@ -230,7 +230,7 @@
         <button class="link-btn plain" type="button" id="rsvpAgain"><span data-i18n="rsvp.another"></span></button>
       </div>
       <footer class="foot" data-reveal>
-        <div class="foot-mono">S <span>&amp;</span> W</div>
+        <div class="foot-mono" data-monogram data-fit="0.6,0.85" aria-label="S & W"><span class="l l-s">S</span><span class="l l-amp">&amp;</span><span class="l l-w">W</span></div>
         <p data-i18n="footer.line"></p>
         <p class="date-num">20 · 10 · 2026</p>
       </footer>
