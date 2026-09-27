@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!-- Source for og-image.jpg (the WhatsApp / social link preview). Regenerate with: npm run og -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex" />
+  <title>Share card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=block" rel="stylesheet" />
+  <style>
+    @font-face { font-family: 'Armelie'; src: url('fonts/Armelie-Regular.otf') format('opentype'); font-display: block; }
+    * { box-sizing: border-box; margin: 0; }
+    html, body { width: 1200px; height: 630px; overflow: hidden; }
+    body {
+      position: relative; color: #4b4a3c;
+      background:
+        radial-gradient(60% 90% at 50% 50%, rgba(255,255,255,.7), transparent 70%),
+        radial-gradient(40% 60% at 8% 100%, rgba(232,185,192,.35), transparent 70%),
+        radial-gradient(40% 60% at 92% 0%, rgba(205,191,228,.35), transparent 70%),
+        repeating-linear-gradient(0deg, rgba(160,140,110,.05) 0 1px, transparent 1px 4px),
+        repeating-linear-gradient(90deg, rgba(160,140,110,.045) 0 1px, transparent 1px 4px),
+        #f4eee3;
+    }
+    .border { position: absolute; inset: 18px; border: 1.5px dashed rgba(184,151,95,.55); border-radius: 6px; }
+    .border::after { content: ''; position: absolute; inset: 7px; border: 1px solid rgba(226,214,194,.9); border-radius: 3px; }
+
+    .sprig { position: absolute; width: 112px; }
+    .sprig svg { width: 100%; height: auto; display: block; }
+    .sprig.tl { top: -18px; left: -6px; transform: rotate(-50deg); }
+    .sprig.br { bottom: -18px; right: -6px; transform: rotate(130deg); }
+    .sprig.tr { top: -18px; right: -6px; transform: rotate(50deg) scaleX(-1); }
+    .sprig.bl { bottom: -18px; left: -6px; transform: rotate(-130deg) scaleX(-1); }
+
+    .wreath { position: absolute; left: 50%; top: 50%; width: 380px; height: 380px; margin: -205px 0 0 -190px; }
+    .wreath > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .mono { position: absolute; inset: 0; font-family: 'Armelie', cursive; font-size: 110px; color: #5d5a45; line-height: 1; white-space: nowrap; }
+    .mono .l { position: absolute; left: 0; top: 0; line-height: 1; }
+    .mono .amp { color: #b8975f; font-size: .62em; }
+    .date-under {
+      position: absolute; left: 0; right: 0; top: 520px; text-align: center;
+      font-family: 'Cinzel', serif; letter-spacing: .4em; font-size: 22px; color: #b8975f;
+    }
+
+    .col { position: absolute; top: 0; bottom: 0; width: 370px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+    .col.en { left: 58px; text-align: center; }
+    .col.ar { right: 58px; text-align: center; direction: rtl; }
+    .kicker { font-family: 'Cinzel', serif; font-size: 17px; letter-spacing: .3em; text-transform: uppercase; color: #56664a; }
+    .ar .kicker { font-family: 'Amiri', serif; letter-spacing: 0; font-size: 26px; }
+    .names { font-family: 'Armelie', cursive; font-size: 50px; line-height: 1.12; color: #5d5a45; margin: 16px 0 12px; }
+    .names .amp-s { color: #b8975f; font-size: .7em; }
+    .ar .names { font-family: 'Aref Ruqaa', serif; font-size: 56px; line-height: 1.35; }
+    .rule { width: 140px; height: 1px; margin: 4px auto 10px; background: linear-gradient(90deg, transparent, #b8975f, transparent); }
+    .line { font-family: 'Cormorant Garamond', serif; font-size: 25px; font-weight: 600; line-height: 1.3; }
+    .line.soft { font-weight: 500; font-style: italic; color: #6d6a58; }
+    .ar .line { font-family: 'Amiri', serif; font-size: 25px; line-height: 1.45; font-style: normal; }
+    .line.venue { color: #3f5f7a; }
+  </style>
+</head>
+<body>
+  <div class="border"></div>
+  <div class="sprig tl" data-art="sprig"></div>
+  <div class="sprig tr" data-art="sprig"></div>
+  <div class="sprig bl" data-art="sprig"></div>
+  <div class="sprig br" data-art="sprig"></div>
+
+  <div class="col en">
+    <p class="kicker">Wedding Invitation</p>
+    <p class="names">Sameer<br><span class="amp-s">&amp;</span> Waad</p>
+    <div class="rule"></div>
+    <p class="line">Tuesday, 20 October 2026</p>
+    <p class="line soft">Doors open 7:00 PM</p>
+    <p class="line venue">Mountain Rose Hotel</p>
+    <p class="line soft">6th of October City · Giza</p>
+  </div>
+
+  <div class="wreath">
+    <div data-art="wreath"></div>
+    <div class="mono" id="mono"><span class="l">S</span><span class="l amp">&amp;</span><span class="l">W</span></div>
+  </div>
+  <p class="date-under">20 · 10 · 2026</p>
+
+  <div class="col ar" lang="ar">
+    <p class="kicker">دعوة زفاف</p>
+    <p class="names">سمير ووعد</p>
+    <div class="rule"></div>
+    <p class="line">الثلاثاء ٢٠ أكتوبر ٢٠٢٦</p>
+    <p class="line soft">فتح الأبواب ٧:٠٠ مساءً</p>
+    <p class="line venue">فندق ماونتن روز</p>
+    <p class="line soft">مدينة السادس من أكتوبر · الجيزة</p>
+  </div>
+
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <filter id="emb" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="4" result="n" />
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G" result="d" />
+        <feDropShadow in="d" dx="0" dy="0.9" stdDeviation="0.6" flood-color="#5b4a3a" flood-opacity="0.35" />
+      </filter>
+      <radialGradient id="pearl" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff" /><stop offset=".55" stop-color="#f1e9df" /><stop offset="1" stop-color="#cfc1b0" /></radialGradient>
+    </defs>
+  </svg>
+
+  <script src="js/art.js"></script>
+  <script>
+    document.querySelectorAll('[data-art]').forEach((el) => { el.innerHTML = Art[el.dataset.art](); });
+
+    // Centre S & W by their measured ink (same approach as the site's monogram).
+    document.fonts.load('110px Armelie').then(() => document.fonts.ready).then(() => {
+      const box = document.getElementById('mono');
+      const spans = [...box.querySelectorAll('.l')];
+      const ctx = document.createElement('canvas').getContext('2d');
+      const W = box.clientWidth, H = box.clientHeight;
+      const measure = () => spans.map((sp) => {
+        const cs = getComputedStyle(sp);
+        ctx.font = `${cs.fontSize} Armelie`;
+        const m = ctx.measureText(sp.textContent), size = parseFloat(cs.fontSize);
+        return { size, l: -m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, t: -m.actualBoundingBoxAscent, b: m.actualBoundingBoxDescent,
+          base: (size - (m.fontBoundingBoxAscent + m.fontBoundingBoxDescent)) / 2 + m.fontBoundingBoxAscent };
+      });
+      const place = (ms) => {
+        const gap = ms[0].size * .04, xs = []; let x = 0;
+        ms.forEach((m) => { const ox = x - m.l; xs.push(ox); x = ox + m.r + gap; });
+        return { xs, width: x - gap };
+      };
+      let ms = measure(), p = place(ms);
+      const letters = [ms[0], ms[2]];
+      const hgt = Math.max(...letters.map((m) => m.b)) - Math.min(...letters.map((m) => m.t));
+      const scale = Math.min(1, (W * .64) / p.width, (H * .44) / hgt);
+      box.style.fontSize = `${110 * scale}px`;
+      ms = measure(); p = place(ms);
+      const top = Math.min(ms[0].t, ms[2].t), bot = Math.max(ms[0].b, ms[2].b);
+      const base = H / 2 - (top + bot) / 2;
+      ms.forEach((m, i) => {
+        const b = i === 1 ? H / 2 - (m.t + m.b) / 2 : base;
+        spans[i].style.left = `${(W - p.width) / 2 + p.xs[i]}px`;
+        spans[i].style.top = `${b - m.base}px`;
+      });
+      document.body.dataset.ready = '1';
+    });
+  </script>
+</body>
+</html>

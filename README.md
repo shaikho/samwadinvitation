@@ -57,6 +57,14 @@ The wedding time, the venue coordinates and the calendar event are in `public/js
 - `public/vendor/motion.js` is a committed copy of the Motion bundle, because Vercel doesn't serve `node_modules`.
   After upgrading `motion`, run `npm run vendor` to refresh it.
 
+## Link preview (WhatsApp / iMessage / Telegram)
+
+Pasting the link shows a card with the monogram, both names, the date, the doors-open time and the venue in Arabic and English.
+- The image is `public/og-image.jpg` (1200×630, about 90 KB), rendered from `public/share-card.html`.
+- The title and description are the `og:*` tags in `public/index.html`. They use the absolute URL `https://samwadinvitation.vercel.app`; update them if the domain changes.
+- To regenerate the image after editing the card: run `npm start`, then `npm run og` (needs Edge or Chrome).
+- WhatsApp caches previews per link. If you already pasted the link before the card existed, share `https://samwadinvitation.vercel.app/?v=2` to get a fresh preview.
+
 ## Fonts
 
 The monogram, seal and English script names use **Armelie** (`public/fonts/Armelie-Regular.otf`, from 1001fonts.com).
