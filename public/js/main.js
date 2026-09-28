@@ -1,14 +1,34 @@
 (function () {
-  const { animate, inView, scroll, stagger } = window.Motion;
+  const { animate, inView, scroll, stagger, frame } = window.Motion;
   const $ = (s, root = document) => root.querySelector(s);
   const $$ = (s, root = document) => Array.from(root.querySelectorAll(s));
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isSmall = window.matchMedia('(max-width: 640px)').matches;
   const EASE = [0.22, 1, 0.36, 1];
+  const SMOOTH = [0.16, 1, 0.3, 1]; // long, soft ease-out for scroll reveals
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  // tiny requestAnimationFrame tween (used for the envelope flap's 3D hinge)
+  function cubicBezier(x1, y1, x2, y2) {
+    const bez = (t, a, b) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
+    return (x) => {
+      let lo = 0, hi = 1, t = x;
+      for (let i = 0; i < 24; i++) { t = (lo + hi) / 2; if (bez(t, x1, x2) < x) lo = t; else hi = t; }
+      return bez(t, y1, y2);
+    };
+  }
+  function tween(ms, ease, onUpdate) {
+    let t0 = null;
+    const step = (now) => {
+      if (t0 === null) t0 = now; // anchor to the frame clock
+      const p = Math.min(1, Math.max(0, (now - t0) / ms));
+      onUpdate(ease(p));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
 
   const WEDDING = new Date('2026-10-20T20:00:00+03:00'); // 8:00 PM Cairo
-  const VENUE = { lat: 29.9310476, lng: 30.9494757, name: 'Mountain Rose Hotel, 6th of October City, Giza, Egypt' };
+  const VENUE = { lat: 29.9310476, lng: 30.9494757, name: 'One View Hall, Mountain Rose Hotel, 6th of October City, Giza, Egypt' };
 
   document.documentElement.classList.add('js');
 
@@ -43,10 +63,10 @@
     lang = lang === 'ar' ? 'en' : 'ar';
     store.set('lang', lang);
     const main = $('main');
-    animate(main, { opacity: [1, 0], filter: ['blur(0px)', 'blur(6px)'] }, { duration: 0.25 });
+    animate(main, { opacity: [1, 0] }, { duration: 0.25 });
     await wait(260);
     applyLang();
-    animate(main, { opacity: [0, 1], filter: ['blur(6px)', 'blur(0px)'] }, { duration: 0.45 });
+    animate(main, { opacity: [0, 1] }, { duration: 0.45 });
   });
 
   // ---------------------------------------------------------------- artwork
@@ -106,7 +126,13 @@
 
   const layers = $$('.layer[data-depth]').map((el) => ({ el, d: parseFloat(el.dataset.depth) }));
   const tilters = $$('.tilt');
-  const charmHolders = [];
+  const sky = $('.sky');
+
+  let maxScroll = 1;
+  const measureScroll = () => { maxScroll = Math.max(1, document.documentElement.scrollHeight - innerHeight); };
+  measureScroll();
+  addEventListener('resize', measureScroll);
+  if (window.ResizeObserver) new ResizeObserver(measureScroll).observe(document.body);
 
   function tiltLoop(now) {
     const idle = tilt.hasGyro ? 0 : 0.12;
@@ -114,7 +140,7 @@
     const ty = tilt.ty + Math.cos(now / 3700) * idle;
     tilt.x += (tx - tilt.x) * 0.06;
     tilt.y += (ty - tilt.y) * 0.06;
-    const sy = scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight);
+    const sy = scrollY / maxScroll;
 
     for (const { el, d } of layers) {
       el.style.transform = `translate3d(${(-tilt.x * 34 * d).toFixed(2)}px, ${(-tilt.y * 34 * d - sy * 120 * d).toFixed(2)}px, 0) rotateX(${(tilt.y * 4).toFixed(2)}deg) rotateY(${(-tilt.x * 4).toFixed(2)}deg)`;
@@ -122,9 +148,8 @@
     for (const el of tilters) {
       el.style.transform = `perspective(1100px) rotateY(${(tilt.x * 7).toFixed(2)}deg) rotateX(${(-tilt.y * 7).toFixed(2)}deg)`;
     }
-    for (const el of charmHolders) {
-      el.style.transform = `rotate(${(-tilt.x * 14).toFixed(2)}deg)`;
-    }
+    // clouds shift a little with the phone's tilt (3D depth)
+    sky.style.transform = `translate3d(${(-tilt.x * 18).toFixed(2)}px, ${(-tilt.y * 10).toFixed(2)}px, 0)`;
     requestAnimationFrame(tiltLoop);
   }
   if (!reduced) requestAnimationFrame(tiltLoop);
@@ -238,76 +263,127 @@
 
   function flyBird(opts = {}) {
     if (reduced) return;
-    const wrap = $('.birds');
     const el = document.createElement('div');
     el.className = 'bird';
     el.innerHTML = BIRD;
-    wrap.appendChild(el);
-    const ltr = opts.ltr ?? Math.random() < .5;
+    $('.birds').appendChild(el);
     const W = innerWidth, H = innerHeight;
+    const ltr = opts.ltr ?? Math.random() < .5;
     const size = opts.scale ?? (.55 + Math.random() * .6);
+    const bw = 34 * size;
+    // start and finish fully outside the screen so every bird crosses the whole width
+    const from = ltr ? -bw - 40 : W + 40, to = ltr ? W + 40 : -bw - 40;
     const y0 = opts.y ?? H * (.08 + Math.random() * .45);
-    const from = ltr ? -60 : W + 60, to = ltr ? W + 60 : -60;
-    const steps = 6;
-    const xs = [], ys = [];
+    const phase = Math.random() * 6;
+    const sx = ltr ? size : -size;
+    const steps = 10;
+    const keyframes = [];
     for (let i = 0; i <= steps; i++) {
-      xs.push(from + (to - from) * (i / steps));
-      ys.push(y0 + Math.sin(i * 1.3 + Math.random()) * 26 - i * (opts.rise ?? 6));
+      const x = from + (to - from) * (i / steps);
+      const y = y0 + Math.sin(i * .8 + phase) * 22 - i * (opts.rise ?? 4);
+      keyframes.push({ transform: `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${sx.toFixed(3)}, ${size.toFixed(3)})` });
     }
-    el.style.scale = `${ltr ? size : -size} ${size}`;
-    const dur = opts.duration ?? (W / 90 + 4 + Math.random() * 4);
-    animate(el, { x: xs, y: ys }, { duration: dur, ease: 'linear', delay: opts.delay ?? 0 })
-      .finished.then(() => el.remove());
+    const seconds = opts.duration ?? Math.min(20, Math.max(7, W / 150 + 5 + Math.random() * 3));
+    // Web Animations API: runs on the compositor, so the flight never stalls while scrolling
+    const anim = el.animate(keyframes, { duration: seconds * 1000, delay: (opts.delay ?? 0) * 1000, easing: 'linear', fill: 'both' });
+    anim.onfinish = () => el.remove();
+    anim.oncancel = () => el.remove();
   }
-  function flock(n = 3) {
+  function flock(n = 3, atY) {
     const ltr = Math.random() < .5;
-    const y = innerHeight * (.12 + Math.random() * .3);
-    for (let i = 0; i < n; i++) flyBird({ ltr, y: y + (i % 2 ? 22 : -8) * i, delay: i * .35, scale: .5 + Math.random() * .35, duration: innerWidth / 110 + 5 });
+    const y = atY ?? innerHeight * (.12 + Math.random() * .3);
+    const duration = Math.min(22, Math.max(8, innerWidth / 130 + 6));
+    for (let i = 0; i < n; i++) flyBird({ ltr, y: y + (i % 2 ? 22 : -10) * i, delay: i * .35, scale: .5 + Math.random() * .35, duration });
   }
   function birdLoop() {
-    Math.random() < .3 ? flock(2 + ((Math.random() * 2) | 0)) : flyBird();
+    // when a cloud bank is on screen, send the birds through (behind) the clouds
+    const band = Clouds.bandY();
+    if (band !== null) flock(2 + ((Math.random() * 2) | 0), band);
+    else Math.random() < .3 ? flock(2 + ((Math.random() * 2) | 0)) : flyBird();
     setTimeout(birdLoop, 6000 + Math.random() * 7000);
   }
 
-  // ---------------------------------------------------------------- countdown charms
-  const GOLD = 'url(#goldGrad)';
-  const charmShapes = {
-    heart: (L) => `<path d="M20 ${L + 24}C6 ${L + 15} 7 ${L + 2} 15 ${L + 3}c3 0 5 3 5 3s2-3 5-3c8-1 9 12-5 21z" fill="${GOLD}"/>`,
-    ring: (L) => `<circle cx="20" cy="${L + 14}" r="8.5" fill="none" stroke="${GOLD}" stroke-width="3"/><path d="M16 ${L + 5}l4-5 4 5-4 3z" fill="#eaf4ff" stroke="#b8975f" stroke-width=".6"/>`,
-    pearl: (L) => `<circle cx="20" cy="${L + 9}" r="7" fill="url(#pearl)"/><circle cx="20" cy="${L + 1}" r="2" fill="${GOLD}"/>`,
-    star: (L) => `<path d="M20 ${L}l3.2 7.6 8.2.7-6.2 5.4 1.9 8-7.1-4.3-7.1 4.3 1.9-8-6.2-5.4 8.2-.7z" fill="${GOLD}"/>`,
-    moon: (L) => `<path d="M24 ${L + 1}a11 11 0 1 0 8 16 9 9 0 0 1-8-16z" fill="${GOLD}"/>`,
-    bird: (L) => `<g transform="translate(4 ${L - 2}) scale(.8)"><path d="M6 19c2-7 12-9 20-7 1-4 7-5 9-1l4 2-4 2c-1 7-9 13-18 12-6-1-10-4-11-8z" fill="#4aa3df"/><path d="M8 19 1 14l2 6-3 4 9-2z" fill="#3f8fcf"/><path d="M14 17C17 8 23 4 28 3c-3 6-5 11-9 15z" fill="#3a8fd0"/><circle cx="32" cy="11.5" r="1" fill="#fff"/></g>`,
-    rose: (L) => `<g transform="translate(20 ${L + 10})"><circle r="9" fill="#e7b9bd" stroke="#c98491" stroke-dasharray="1.6 1"/><circle r="5.5" fill="#c98491"/><circle r="2.6" fill="#a9606f"/></g>`,
-  };
-  function buildCharms() {
-    const box = $('.charms');
-    const specs = [
-      [5, 70, 'pearl'], [15, 150, 'heart'], [26, 95, 'bird'], [38, 185, 'star'],
-      [50, 120, 'ring'], [62, 175, 'rose'], [74, 90, 'bird'], [85, 140, 'moon'], [95, 60, 'pearl'],
-    ];
-    const use = isSmall ? specs.filter((_, i) => i % 2 === 0 || i === 3 || i === 5) : specs;
-    use.forEach(([left, L, shape], i) => {
-      // keep the longest charm clear of the (vertically centred) countdown
-      const h = Math.round(L * Math.min(1, (innerHeight * .19) / 185));
-      let beads = '';
-      for (let y = 14; y < h - 8; y += 16) beads += `<circle cx="20" cy="${y}" r="${i % 2 ? 2.4 : 1.8}" fill="url(#pearl)"/>`;
-      const holder = document.createElement('div');
-      holder.className = 'charm';
-      holder.style.left = `calc(${left}% - 20px)`;
-      holder.innerHTML = `<div class="swing"><svg width="40" height="${h + 30}" viewBox="0 0 40 ${h + 30}">
-        <path d="M20 0V${h}" stroke="#b8975f" stroke-width=".9" stroke-dasharray="2.5 1.5"/>${beads}${charmShapes[shape](h)}</svg></div>`;
-      box.appendChild(holder);
-      charmHolders.push(holder);
-      const swing = $('.swing', holder);
-      swing.style.transformOrigin = 'top center';
-      if (!reduced) {
-        const a = 3 + Math.random() * 4;
-        animate(swing, { rotate: [-a, a] }, { duration: 2.4 + Math.random() * 1.8, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut', delay: -Math.random() * 2 });
+  // ---------------------------------------------------------------- clouds
+  // Soft, slightly see-through clouds drifting across the top of the countdown and
+  // timeline sections. They live in a fixed layer above the birds, so birds fly behind
+  // them; each bank is moved to follow its section as the page scrolls.
+  const Clouds = (function () {
+    let seedN = 1;
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    function cloudSVG() {
+      const id = `cl${seedN++}`;
+      const puffs = 5 + ((Math.random() * 3) | 0);
+      let circles = '';
+      for (let i = 0; i < puffs; i++) {
+        const t = i / (puffs - 1);
+        const x = 50 + t * 200 + rnd(-8, 8);
+        const r = 26 + Math.sin(t * Math.PI) * rnd(18, 30);
+        circles += `<circle cx="${x.toFixed(1)}" cy="${(98 - r * .62).toFixed(1)}" r="${r.toFixed(1)}"/>`;
       }
-    });
-  }
-  buildCharms();
+      return `<svg viewBox="0 0 300 130" aria-hidden="true">
+        <defs>
+          <linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="0" y1="10" x2="0" y2="126">
+            <stop offset="0" stop-color="#ffffff"/><stop offset=".62" stop-color="#f8f7f4"/><stop offset="1" stop-color="#dde5ee"/>
+          </linearGradient>
+          <filter id="${id}f" x="-10%" y="-20%" width="120%" height="140%"><feGaussianBlur stdDeviation="1.6"/></filter>
+        </defs>
+        <g filter="url(#${id}f)" fill="url(#${id}g)">${circles}<ellipse cx="150" cy="100" rx="122" ry="24"/></g>
+      </svg>`;
+    }
+
+    const banks = [];
+    function build(sectionSel, count, yFrom, yTo) {
+      const section = $(sectionSel);
+      const bank = document.createElement('div');
+      bank.className = 'cloudbank';
+      for (let i = 0; i < count; i++) {
+        const c = document.createElement('div');
+        c.className = 'cloud';
+        const w = isSmall ? rnd(140, 230) : rnd(200, 360);
+        const dur = rnd(70, 130); // slow drift across the screen
+        c.style.cssText = `--w:${w.toFixed(0)}px;--y:${rnd(yFrom, yTo).toFixed(0)}px;--o:${rnd(.72, .88).toFixed(2)};--dur:${dur.toFixed(0)}s;--delay:-${(Math.random() * dur).toFixed(1)}s;--bob:${rnd(5, 9).toFixed(1)}s`;
+        c.innerHTML = cloudSVG();
+        bank.appendChild(c);
+      }
+      $('.sky').appendChild(bank);
+      const entry = { section, bank, height: section.offsetHeight, top: Infinity, yFrom, yTo };
+      banks.push(entry);
+      return entry;
+    }
+
+    function place(entry, p) {
+      const top = innerHeight - p * (entry.height + innerHeight); // section top in the viewport
+      entry.top = top;
+      entry.bank.style.transform = `translate3d(0, ${top.toFixed(1)}px, 0)`;
+      entry.bank.classList.toggle('is-off', p <= 0 || p >= 1);
+    }
+
+    function init() {
+      const vh = innerHeight;
+      build('#countdown', isSmall ? 4 : 6, -20, Math.max(40, vh * .2 - 50));
+      build('#timeline', isSmall ? 4 : 6, -40, isSmall ? 70 : 110);
+      addEventListener('resize', () => banks.forEach((b) => { b.height = b.section.offsetHeight; }));
+      banks.forEach((entry) => {
+        place(entry, 0);
+        scroll((p) => place(entry, p), { target: entry.section, offset: ['start end', 'end start'] });
+      });
+    }
+
+    // viewport y of a cloud band that is currently on screen (for bird flights), or null
+    function bandY() {
+      for (const b of banks) {
+        const mid = b.top + (b.yFrom + b.yTo) / 2 + 30;
+        if (mid > 20 && mid < innerHeight * .8) return mid;
+      }
+      return null;
+    }
+    return { init, bandY, svg: cloudSVG };
+  })();
+
+  // very faint clouds drifting through the middle of each countdown circle
+  $$('.hoop').forEach((hoop) => {
+    hoop.insertAdjacentHTML('afterbegin', `<div class="hoop-cloud" aria-hidden="true">${Clouds.svg()}</div><div class="hoop-cloud b" aria-hidden="true">${Clouds.svg()}</div>`);
+  });
 
   // ---------------------------------------------------------------- countdown
   const nums = Object.fromEntries($$('.num').map((el) => [el.dataset.unit, el]));
@@ -415,7 +491,7 @@
   }
   const fontsReady = Promise.all([
     document.fonts.load('60px Armelie'),
-    document.fonts.load('40px "Cormorant Garamond"'),
+    document.fonts.load('40px Cinzel'),
     document.fonts.load('40px Amiri', '٠١٢٣'),
   ]).catch(() => {}).then(() => document.fonts.ready);
   fontsReady.then(centerAll);
@@ -427,8 +503,8 @@
     $('#directionsBtn').href = `https://www.google.com/maps/dir/?api=1&destination=${VENUE.lat},${VENUE.lng}&travelmode=driving`;
     const title = lang === 'ar' ? 'حفل زفاف سمير ووعد' : 'Sameer & Waad’s Wedding';
     const details = lang === 'ar'
-      ? 'فتح الأبواب ٧:٠٠ مساءً · بدء الحفل ٨:٠٠ مساءً\nفندق ماونتن روز'
-      : 'Doors open 7:00 PM · Celebration 8:00 PM\nMountain Rose Hotel';
+      ? 'فتح الأبواب ٧:٠٠ مساءً · بدء الحفل ٨:٠٠ مساءً\nقاعة ون فيو · فندق ماونتن روز'
+      : 'Doors open 7:00 PM · Celebration 8:00 PM\nOne View Hall · Mountain Rose Hotel';
     const q = new URLSearchParams({
       action: 'TEMPLATE',
       text: title,
@@ -447,43 +523,40 @@
       const items = $$('[data-reveal]', section);
       items.forEach((el, i) => {
         inView(el, () => {
-          animate(el, { opacity: [0, 1], y: [28, 0], filter: ['blur(8px)', 'blur(0px)'] }, { duration: 1, delay: Math.min(i, 6) * .09, ease: EASE });
-        }, { amount: .2 });
+          animate(el, { opacity: [0, 1], y: [34, 0] }, { duration: 1.2, delay: Math.min(i, 6) * .08, ease: SMOOTH });
+        }, { amount: .15, margin: '0px 0px -6% 0px' });
       });
     });
 
     // venue frame: card unfolds, blooms pop, then the text
     inView('.frame', (frame) => {
       const art = $('.frame-art', frame);
-      animate(art, {
-        opacity: [0, 1],
-        scale: [.92, 1],
-        y: [40, 0],
-        clipPath: ['inset(0% 0% 100% 0%)', 'inset(0% 0% 0% 0%)'],
-      }, { duration: 1.4, ease: EASE });
-      animate($$('.frame-content > *', frame), { opacity: [0, 1], y: [18, 0] }, { delay: stagger(.09, { startDelay: .6 }), duration: .8, ease: EASE });
+      animate(art, { opacity: [0, 1], scale: [.94, 1], y: [50, 0] }, { duration: 1.4, ease: SMOOTH });
+      animate($$('.frame-content > *', frame), { opacity: [0, 1], y: [18, 0] }, { delay: stagger(.08, { startDelay: .45 }), duration: 1, ease: SMOOTH });
       Petals.burst(isSmall ? 14 : 22, innerWidth / 2, innerHeight * .35);
     }, { amount: .25 });
 
     // story arch
     inView('.arch', (arch) => {
       const art = $('.arch-art', arch);
-      animate(art, {
-        opacity: [0, 1],
-        scale: [.94, 1],
-        clipPath: ['circle(0% at 50% 100%)', 'circle(150% at 50% 100%)'],
-      }, { duration: 1.6, ease: EASE });
+      animate(art, { opacity: [0, 1], scale: [.92, 1], y: [40, 0] }, { duration: 1.5, ease: SMOOTH });
     }, { amount: .25 });
 
     // countdown: birds greet you
-    inView('#countdown', () => { flock(3); }, { amount: .4 });
+    // countdown & timeline: a flock passes behind the clouds
+    ['#countdown', '#timeline'].forEach((sel) => inView(sel, () => {
+      setTimeout(() => flock(3, Clouds.bandY() ?? undefined), 400);
+    }, { amount: .3 }));
 
     // timeline
     const tl = $('.tl');
     const fill = $('.tl-fill'), pearlDot = $('.tl-pearl');
+    const line = $('.tl-line');
+    let lineH = line.offsetHeight;
+    addEventListener('resize', () => { lineH = line.offsetHeight; });
     scroll((p) => {
       fill.style.transform = `scaleY(${p})`;
-      pearlDot.style.top = `${p * 100}%`;
+      pearlDot.style.transform = `translate3d(0, ${(p * lineH).toFixed(1)}px, 0)`;
     }, { target: tl, offset: ['start 70%', 'end 55%'] });
 
     $$('.tl-item').forEach((item, i) => {
@@ -493,12 +566,33 @@
         const icon = $('.tl-icon', item), text = $('.tl-text', item);
         animate(icon, { opacity: [0, 1], scale: [.6, 1], rotate: [-8 * side, 0] }, { type: 'spring', bounce: .4, duration: .9 });
         animate($$('.draw > *', icon), { strokeDashoffset: [1, 0] }, { duration: 1.4, delay: stagger(.12), ease: 'easeInOut' });
-        animate(text, { opacity: [0, 1], x: [40 * side * dir, 0] }, { duration: .9, delay: .15, ease: EASE });
-      }, { amount: .5 });
+        animate(text, { opacity: [0, 1], x: [40 * side * dir, 0] }, { duration: 1, delay: .15, ease: SMOOTH });
+      }, { amount: .4 });
     });
+
+    // gentle scroll-linked parallax on containers that nothing else animates
+    if (!reduced) {
+      const drift = (sel, from, to) => $$(sel).forEach((el) => {
+        scroll(animate(el, { y: [from, to] }, { ease: 'linear' }), { target: el.closest('.slide'), offset: ['start end', 'end start'] });
+      });
+      drift('.count-inner', 40, -40);
+      drift('.invite-card', 50, -50);
+      drift('.sprig', -60, 60);
+      drift('.tl', 30, -30);
+    }
 
     // music follows the scroll depth
     scroll((p) => window.Music.setProgress(p));
+  }
+
+  // ---------------------------------------------------------------- smooth scrolling
+  // Lenis eases wheel/trackpad scrolling; touch keeps the phone's native momentum.
+  // It runs inside Motion's frame loop so scroll-linked animations update in the same frame.
+  function startSmoothScroll() {
+    if (reduced || !window.Lenis) return;
+    const lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.9, smoothWheel: true, syncTouch: false, autoRaf: false });
+    frame.update(({ timestamp }) => lenis.raf(timestamp), true);
+    window.lenis = lenis;
   }
 
   // ---------------------------------------------------------------- hero intro
@@ -517,30 +611,101 @@
     enableGyro();               // iOS needs this inside the tap
     window.Music.start();       // audio also needs the user gesture
     $('#musicToggle').setAttribute('aria-pressed', 'true');
-
-    const seal = $('.seal'), copy = $('.gate-copy');
-    animate(copy, { opacity: 0, y: 20 }, { duration: .4 });
-    animate(seal, { scale: [1, 1.15, 0.2], rotate: [0, -10, 25], opacity: [1, 1, 0] }, { duration: .9, ease: EASE });
-    Petals.burst(isSmall ? 26 : 40, innerWidth / 2, innerHeight / 2);
-
-    const doorOpts = { duration: 1.7, delay: .45, ease: [0.7, 0, 0.2, 1] };
-    animate('.door-left', { rotateY: [0, -105], opacity: [1, 1, 0] }, doorOpts);
-    animate('.door-right', { rotateY: [0, 105], opacity: [1, 1, 0] }, doorOpts);
     gate.style.pointerEvents = 'none';
-    setTimeout(() => gate.remove(), 2300);
-    setTimeout(() => {
+
+    const env = $('.gate-envelope'), seal = $('.seal'), flap = $('.env-flap'), letter = $('.env-letter');
+    const back = $('.env-back'), pocket = $('.env-pocket');
+    idle.forEach((a) => a.stop());
+
+    const revealSite = () => {
       document.body.classList.remove('is-locked');
       heroIntro();
+      Clouds.init();
       initReveals();
+      startSmoothScroll();
       Petals.start();
       setTimeout(() => flock(3), 1200);
       setTimeout(birdLoop, 7000);
-    }, 700);
+    };
+
+    if (reduced) {
+      animate(gate, { opacity: [1, 0] }, { duration: .5 });
+      setTimeout(() => { gate.remove(); revealSite(); }, 500);
+      return;
+    }
+
+    // 1 · the wax seal cracks into two halves that fall away
+    animate('.gate-copy', { opacity: 0, y: 16 }, { duration: .35 });
+    const sr = seal.getBoundingClientRect(), er = env.getBoundingClientRect();
+    ['l', 'r'].forEach((side) => {
+      const half = document.createElement('div');
+      half.className = `seal-half ${side}`;
+      half.innerHTML = seal.innerHTML;
+      Object.assign(half.style, {
+        left: `${sr.left - er.left}px`, top: `${sr.top - er.top}px`, width: `${sr.width}px`, height: `${sr.height}px`,
+      });
+      env.appendChild(half);
+      const dir = side === 'l' ? -1 : 1;
+      animate(half, { x: [0, dir * 6, dir * 46], y: [0, -4, innerHeight * .75], rotate: [0, dir * 6, dir * 70] },
+        { duration: 1.2, delay: .12, ease: [0.45, 0, 0.7, 1], times: [0, .15, 1] });
+      animate(half, { opacity: [1, 0] }, { duration: .5, delay: .75 });
+      setTimeout(() => half.remove(), 1400);
+    });
+    animate(seal, { scale: [1, 1.08] }, { duration: .12 });
+    setTimeout(() => { seal.style.visibility = 'hidden'; }, 120);
+
+    // 2 · the flap swings open on its hinge (and slips behind the letter once it passes 90°)
+    const T_FLAP = 350;
+    setTimeout(() => {
+      // hinge on the top edge with a slight overshoot; once it passes 90° (edge-on)
+      // it tucks behind the letter so the letter can slide out in front of it
+      tween(950, cubicBezier(0.5, 0, 0.25, 1.15), (k) => {
+        const deg = k * 180;
+        flap.style.transform = `perspective(1400px) rotateX(${deg.toFixed(2)}deg)`;
+        if (deg >= 90) flap.style.zIndex = '1';
+      });
+    }, T_FLAP);
+
+    // 3 · the letter slides up out of the envelope
+    const T_SLIDE = T_FLAP + 900;
+    const envH = er.height;
+    const slideY = -envH * .62;
+    setTimeout(() => {
+      animate(letter, { y: [0, slideY] }, { duration: .95, ease: [0.22, 1, 0.36, 1] });
+      animate(env, { y: [0, envH * .18] }, { duration: .95, ease: [0.22, 1, 0.36, 1] });
+    }, T_SLIDE);
+
+    // 4 · the envelope drops away while the letter comes forward and grows into the site
+    const T_GROW = T_SLIDE + 950;
+    setTimeout(() => {
+      letter.style.zIndex = '7';
+      [back, pocket, flap].forEach((el) => animate(el, { y: [0, innerHeight * .75], opacity: [1, 1, 0] }, { duration: 1.2, ease: [0.5, 0, 0.75, .7] }));
+      const lr = letter.getBoundingClientRect();
+      const dx = innerWidth / 2 - (lr.left + lr.width / 2);
+      const dy = innerHeight / 2 - (lr.top + lr.height / 2);
+      const scale = Math.max(innerWidth / lr.width, innerHeight / lr.height) * 1.04;
+      animate($('.letter-inner', letter), { opacity: [1, 1, 0] }, { duration: .9, times: [0, .45, 1], ease: 'easeIn' });
+      animate(letter, { x: [0, dx], y: [slideY, slideY + dy], scale: [1, scale], borderRadius: ['4px', '0px'] },
+        { duration: 1.25, ease: [0.45, 0, 0.2, 1] });
+      Petals.burst(isSmall ? 26 : 40, innerWidth / 2, innerHeight / 2);
+    }, T_GROW);
+
+    // 5 · the letter has become the page: fade the gate away over the live site
+    const T_SITE = T_GROW + 1100;
+    setTimeout(revealSite, T_SITE);
+    setTimeout(() => animate(gate, { opacity: [1, 0] }, { duration: .6, ease: 'easeOut' }), T_SITE + 150);
+    setTimeout(() => gate.remove(), T_SITE + 900);
   }
   $('.seal').addEventListener('click', openGate);
-  $('.gate').addEventListener('click', (e) => { if (e.target.closest('.gate')) openGate(); });
-  animate('.seal', { scale: [1, 1.05, 1] }, { duration: 2.2, repeat: Infinity, ease: 'easeInOut' });
+  $('.gate').addEventListener('click', openGate);
+  // before the tap: the envelope floats gently and the seal breathes
+  const idle = reduced ? [] : [
+    animate('.gate-envelope', { y: [0, -8, 0], rotate: [-.6, .6, -.6] }, { duration: 5, repeat: Infinity, ease: 'easeInOut' }),
+    animate('.seal', { scale: [1, 1.05, 1] }, { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }),
+  ];
+  animate('.gate-envelope', { opacity: [0, 1], scale: [.94, 1] }, { duration: .9, ease: EASE });
   animate('.gate-copy', { opacity: [0, 1], y: [12, 0] }, { duration: 1, delay: .4 });
+  if (new URLSearchParams(location.search).has('autoopen')) setTimeout(openGate, 1000);
 
   // ---------------------------------------------------------------- music toggle
   $('#musicToggle').addEventListener('click', () => {
@@ -600,19 +765,34 @@
   // ---------------------------------------------------------------- ?snapshot
   // Used by `npm run og` to capture the link-preview image: no gate, no controls,
   // hero fully revealed with petals and a flock of birds.
-  if (new URLSearchParams(location.search).has('snapshot')) {
+  // ?snapshot=<section id> captures that section instead (e.g. ?snapshot=countdown).
+  const snapshotAt = new URLSearchParams(location.search).get('snapshot');
+  if (snapshotAt !== null) {
     document.documentElement.classList.add('snapshot');
     $('.gate').remove();
     document.body.classList.remove('is-locked');
     // final states only (CSS .snapshot rules) so the capture never lands mid-animation
     Petals.start();
     Petals.scatter(38);
-    [[.11, .15, .7], [.15, .19, .55], [.12, .2, .5], [.155, .245, .75], [.18, .19, .8], [.155, .29, .7]].forEach(([x, y, sc]) => {
+    const target = snapshotAt && document.getElementById(snapshotAt);
+    if (target) {
+      // show only that section (headless screenshots don't capture scrolled pages reliably)
+      $$('.slide').forEach((sl) => { if (sl !== target) sl.style.display = 'none'; });
+      Clouds.init();
+    }
+    const birdAt = (x, y, sc) => {
       const b = document.createElement('div');
       b.className = 'bird';
       b.innerHTML = BIRD;
-      b.style.transform = `translate(${innerWidth * x}px, ${innerHeight * y}px) scale(${sc})`;
+      b.style.transform = `translate(${innerWidth * x}px, ${y}px) scale(${sc})`;
       $('.birds').appendChild(b);
-    });
+    };
+    if (target) {
+      // a flock crossing the cloud band, partly hidden behind the clouds
+      const band = 60;
+      [[.2, 0, .7], [.26, 22, .55], [.33, -8, .6], [.45, 30, .75], [.58, 6, .65], [.7, 26, .6]].forEach(([x, dy, sc]) => birdAt(x, band + dy, sc));
+    } else {
+      [[.11, .15, .7], [.15, .19, .55], [.12, .2, .5], [.155, .245, .75], [.18, .19, .8], [.155, .29, .7]].forEach(([x, y, sc]) => birdAt(x, innerHeight * y, sc));
+    }
   }
 })();

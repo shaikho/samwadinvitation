@@ -1,6 +1,6 @@
 # Sameer & Waad · سمير ووعد
 
-Wedding invitation site for **Tuesday 20 October 2026, 8:00 PM** at **Mountain Rose Hotel**.
+Wedding invitation site for **Tuesday 20 October 2026, 8:00 PM** at **One View Hall, Mountain Rose Hotel**.
 Arabic first (RTL), with a one-tap switch to English.
 
 ## Run locally
