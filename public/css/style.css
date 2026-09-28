@@ -88,7 +88,8 @@ html.lenis, html.lenis body { height: auto; }
 .layer .motif svg { width: 100%; height: 100%; display: block; }
 
 /* ---------------- petals & birds ---------------- */
-.petals { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+.petals { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; transition: opacity .6s ease; }
+.qr-visible .petals { opacity: .15; } /* don't let petals cover the QR code */
 .birds { position: fixed; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
 .bird { position: absolute; top: 0; left: 0; width: 34px; height: 34px; will-change: transform; transform: translate3d(-200px, -200px, 0); }
 
@@ -155,17 +156,14 @@ html.lenis, html.lenis body { height: auto; }
   letter-spacing: .28em; text-transform: uppercase; color: var(--sage-dark);
 }
 :lang(ar) .letter-kicker { letter-spacing: 0; font-size: calc(var(--env-w) * .05); text-transform: none; }
-.letter-mono {
-  position: relative; width: 100%; height: 34%;
-  font-family: 'Armelie', cursive; font-size: calc(var(--env-w) * .16); color: #5d5a45;
-}
+.letter-logo { height: 40%; aspect-ratio: 491 / 667; margin: 3% 0 2%; }
 .letter-divider { width: 42%; }
 .letter-divider svg { display: block; width: 100%; height: auto; }
 .letter-date { margin: 2% 0 0; font-family: 'Cinzel', serif; letter-spacing: .3em; font-size: calc(var(--env-w) * .034); color: var(--gold); direction: ltr; }
 
 .env-pocket { inset: 0; z-index: 3; }
 .env-flap {
-  left: 0; right: 0; top: 0; height: 59%;
+  left: 0; right: 0; top: 0; height: 53%; /* flap tip lands at the envelope centre */
   z-index: 4;
   transform-origin: 50% 0;
   transform-style: preserve-3d;
@@ -177,7 +175,7 @@ html.lenis, html.lenis body { height: auto; }
 .flap-inner { transform: rotateX(180deg); }
 
 .seal {
-  position: absolute; z-index: 5; left: 50%; top: 59%;
+  position: absolute; z-index: 5; left: 50%; top: 50%;
   width: clamp(84px, calc(var(--env-w) * .27), 128px); aspect-ratio: 1;
   translate: -50% -50%;
   border: 0; padding: 0; background: none; cursor: pointer;
@@ -189,8 +187,6 @@ html.lenis, html.lenis body { height: auto; }
 .seal-half svg { width: 100%; height: 100%; display: block; }
 .seal-half.l { clip-path: polygon(0 0, 54% 0, 44% 38%, 56% 62%, 46% 100%, 0 100%); }
 .seal-half.r { clip-path: polygon(54% 0, 100% 0, 100% 100%, 46% 100%, 56% 62%, 44% 38%); }
-.seal-text { direction: ltr; unicode-bidi: isolate; font-family: 'Armelie', cursive; font-size: 48px; fill: #f3d9c4; opacity: .95; }
-.seal-text.small { font-size: 13px; }
 .seal:focus-visible { outline: 2px solid #fff; outline-offset: 6px; border-radius: 50%; }
 .gate-copy {
   position: absolute; left: 0; right: 0; bottom: max(9svh, 60px); z-index: 2;
@@ -264,21 +260,14 @@ main { position: relative; z-index: 2; }
   transform-style: preserve-3d;
 }
 .wreath, .wreath svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-/* Monograms: JS (layoutMonograms) places each glyph by its measured ink, so script
-   swashes can't pull the letters off-centre. The flex layout is only the fallback. */
-[data-monogram] {
-  display: flex; align-items: center; justify-content: center;
-  direction: ltr; white-space: nowrap; line-height: 1;
+/* the couple's logo, centred in the wreath */
+.hero-logo {
+  position: absolute; left: 50%; top: 50%;
+  height: 50%; aspect-ratio: 491 / 667;
+  translate: -50% -52%;
+  filter: drop-shadow(0 6px 10px rgba(93,90,69,.16));
 }
-[data-monogram] .l { display: inline-block; line-height: 1; }
-[data-monogram].is-laid-out .l { position: absolute; left: 0; top: 0; margin: 0; }
-[data-monogram] .l-amp { font-size: .62em; color: var(--gold); margin: 0 .12em; }
-.letters {
-  position: absolute; inset: 0;
-  font-family: 'Armelie', cursive; color: #5d5a45;
-  font-size: min(20vw, 12svh, 100px);
-  transform: translateZ(40px);
-}
+.hero-logo svg, .letter-logo svg, .foot-logo svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .scroll-cue {
   margin-top: 22px; display: flex; flex-direction: column; align-items: center; gap: 6px;
   font-family: var(--f-caps); font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--sage-dark);
@@ -478,6 +467,52 @@ main { position: relative; z-index: 2; }
 
 .timeline { padding-top: clamp(160px, 24vh, 230px); } /* room for the cloud bank */
 
+/* ---- shared disposable camera ---- */
+.camera { gap: 2px; }
+.cam-flash {
+  position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background: radial-gradient(60% 45% at 50% 22%, #fff, rgba(255,255,255,.6) 45%, transparent 75%);
+  opacity: 0;
+}
+.cam-illus { width: min(200px, 52vw); margin-bottom: 10px; }
+.cam-illus svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 12px 18px rgba(80,90,60,.22)); }
+.cam-lead { max-width: 34ch; }
+:lang(ar) .cam-lead { max-width: 36ch; line-height: 1.9; }
+.cam-card {
+  margin: 22px auto 6px; padding: 18px 18px 14px;
+  width: min(100%, 300px);
+  background: #fbf7ef; border-radius: 16px;
+  border: 1px dashed rgba(111,128,95,.6);
+  box-shadow: 0 0 0 6px #fbf7ef, 0 0 0 7px rgba(184,151,95,.45), 0 14px 30px rgba(80,90,60,.16);
+}
+.qr-frame { display: block; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; }
+.qr-frame .qr { display: block; width: 100%; height: 100%; }
+.cam-scan { margin: 12px 0 0; font-family: var(--f-caps); font-size: 13px; letter-spacing: .22em; text-transform: uppercase; color: #5d5a45; }
+:lang(ar) .cam-scan { letter-spacing: 0; font-size: 18px; text-transform: none; }
+.cam-shots { margin: 4px 0 0; font-style: italic; color: var(--ink-soft); }
+:lang(ar) .cam-shots { font-style: normal; }
+.cam-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 18px; padding: 0 28px; min-width: min(100%, 300px);
+  text-decoration: none; line-height: 52px;
+}
+.cam-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+.cam-note { margin: 8px 0 0; font-size: 15px; color: var(--ink-soft); }
+.cam-steps {
+  list-style: none; margin: 26px auto 0; padding: 0;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  width: min(100%, 520px);
+}
+.cam-steps li { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 15px; line-height: 1.35; color: #5d5a45; }
+:lang(ar) .cam-steps li { font-size: 16px; }
+.step-n {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Cinzel', serif; font-size: 16px; color: #5d5a45;
+  background: radial-gradient(circle at 50% 35%, #f3f8f6, #e4eeec);
+  box-shadow: 0 0 0 2px #a9b99a, 0 0 0 3.5px #fbf6ec, 0 0 0 4.5px #6f805f;
+}
+
 /* ---- rsvp ---- */
 .rsvp { justify-content: flex-start; padding-top: 90px; }
 .envelope { width: 150px; margin-bottom: 4px; }
@@ -516,7 +551,7 @@ main { position: relative; z-index: 2; }
 
 .foot { margin-top: auto; padding-top: 48px; color: var(--ink-soft); }
 .foot p { margin: 0; }
-.foot-mono { position: relative; width: 100%; height: 76px; font-family: 'Armelie', cursive; font-size: 50px; color: #5d5a45; }
+.foot-logo { height: 76px; aspect-ratio: 491 / 667; margin: 0 auto 6px; }
 
 /* ---------------- svg art helpers ---------------- */
 .bloom { transform-box: fill-box; transform-origin: center; }
@@ -527,14 +562,14 @@ main { position: relative; z-index: 2; }
 
 /* link-preview capture (npm run og) */
 .snapshot .controls, .snapshot .scroll-cue { display: none !important; }
-.snapshot [data-reveal], .snapshot .wreath svg, .snapshot .letters .l, .snapshot .frame-art, .snapshot .frame-content > *, .snapshot .arch-art, .snapshot .tl-icon, .snapshot .tl-text { opacity: 1 !important; filter: none !important; }
+.snapshot [data-reveal], .snapshot .wreath svg, .snapshot .hero-logo, .snapshot .frame-art, .snapshot .frame-content > *, .snapshot .arch-art, .snapshot .tl-icon, .snapshot .tl-text { opacity: 1 !important; filter: none !important; }
 .snapshot .tl-icon .draw * { stroke-dashoffset: 0 !important; }
-.snapshot [data-reveal], .snapshot .letters .l { transform: none !important; }
+.snapshot [data-reveal], .snapshot .hero-logo { transform: none !important; }
 .snapshot .bird .wing, .snapshot .bird .wing-back { animation: none; }
 
 /* ---------------- reveal defaults (JS animates in) ---------------- */
 .js [data-reveal] { opacity: 0; }
-.js .wreath svg, .js .letters .l { opacity: 0; }
+.js .wreath svg, .js .hero-logo { opacity: 0; }
 .js .frame-art, .js .frame-content > * { opacity: 0; }
 .js .arch-art { opacity: 0; }
 .js .tl-icon, .js .tl-text { opacity: 0; }

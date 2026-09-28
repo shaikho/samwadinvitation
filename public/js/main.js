@@ -436,57 +436,7 @@
     const dy = m.size / 2 - (m.base + (m.t + m.b) / 2);
     el.style.translate = `${dx.toFixed(1)}px ${dy.toFixed(1)}px`;
   }
-  function layoutMonogram(box) {
-    const spans = $$('.l', box);
-    const W = box.clientWidth, H = box.clientHeight;
-    if (!W || !H) return;
-    const isAmp = spans.map((sp) => sp.classList.contains('l-amp'));
-    const [fitW, fitH] = (box.dataset.fit || '0.9,0.9').split(',').map(Number);
-    let ms, xs, x, gap, top, bot;
-    const measure = () => {
-      ms = spans.map((sp) => inkMetrics(sp, sp.textContent));
-      gap = ms[0].size * .04;
-      xs = [];
-      x = 0;
-      ms.forEach((m) => { const ox = x - m.l; xs.push(ox); x = ox + m.r + gap; });
-      const letters = ms.filter((_, i) => !isAmp[i]);
-      top = Math.min(...letters.map((m) => m.t));
-      bot = Math.max(...letters.map((m) => m.b));
-    };
-    // shrink the whole monogram until its ink fits the space (script swashes are wide)
-    box.style.fontSize = '';
-    measure();
-    const scale = Math.min(1, (W * fitW) / (x - gap), (H * fitH) / (bot - top));
-    if (scale < 1) {
-      box.style.fontSize = `${(parseFloat(getComputedStyle(box).fontSize) * scale).toFixed(2)}px`;
-      measure();
-    }
-    const startX = (W - (x - gap)) / 2;
-    const sharedBase = H / 2 - (top + bot) / 2; // S and W share one baseline
-    ms.forEach((m, i) => {
-      const baseline = isAmp[i] ? H / 2 - (m.t + m.b) / 2 : sharedBase; // & sits on the optical centre
-      spans[i].style.left = `${(startX + xs[i]).toFixed(1)}px`;
-      spans[i].style.top = `${(baseline - m.base).toFixed(1)}px`;
-    });
-    box.classList.add('is-laid-out');
-  }
-  function centerSvgText(el) {
-    const [cx, cy] = el.dataset.centerInk.split(',').map(Number);
-    el.style.fontSize = '';
-    let m = inkMetrics(el, el.textContent);
-    const fit = Number(el.dataset.fit);
-    const w = m.r - m.l, hgt = m.b - m.t;
-    if (fit && Math.max(w, hgt) > fit) {
-      el.style.fontSize = `${(m.size * fit / Math.max(w, hgt)).toFixed(2)}px`;
-      m = inkMetrics(el, el.textContent);
-    }
-    el.setAttribute('text-anchor', 'start');
-    el.setAttribute('x', (cx - (m.l + m.r) / 2).toFixed(1));
-    el.setAttribute('y', (cy - (m.t + m.b) / 2).toFixed(1));
-  }
   function centerAll() {
-    $$('[data-monogram]').forEach(layoutMonogram);
-    $$('[data-center-ink]').forEach(centerSvgText);
     $$('.num').forEach(centerInk);
   }
   const fontsReady = Promise.all([
@@ -543,6 +493,21 @@
     }, { amount: .25 });
 
     // countdown: birds greet you
+    // shared camera: a soft "flash" pops the first time the section comes into view
+    inView('#camera', (section) => {
+      if (reduced) return;
+      setTimeout(() => {
+        animate($('.cam-flash', section), { opacity: [0, .85, 0] }, { duration: .7, times: [0, .12, 1], ease: 'easeOut' });
+        animate($('.cam-flash-window', section), { fill: ['#e9eef2', '#ffffff', '#e9eef2'] }, { duration: .7 });
+      }, 900);
+    }, { amount: .4 });
+
+    // keep drifting petals from covering the QR code while it's on screen
+    inView('.cam-card', () => {
+      document.body.classList.add('qr-visible');
+      return () => document.body.classList.remove('qr-visible');
+    }, { amount: .3 });
+
     // countdown & timeline: a flock passes behind the clouds
     ['#countdown', '#timeline'].forEach((sel) => inView(sel, () => {
       setTimeout(() => flock(3, Clouds.bandY() ?? undefined), 400);
@@ -600,7 +565,9 @@
     const svg = $('.wreath svg');
     animate(svg, { opacity: [0, 1], rotate: [-25, 0], scale: [.8, 1] }, { duration: 1.8, ease: EASE });
     if (!reduced) animate($$('.bloom', svg), { scale: [0, 1] }, { delay: stagger(.03, { startDelay: .5 }), type: 'spring', bounce: .5, duration: .9 });
-    animate($$('.letters .l'), { opacity: [0, 1], y: [40, 0], filter: ['blur(10px)', 'blur(0px)'] }, { delay: stagger(.2, { startDelay: .7 }), duration: 1.1, ease: EASE });
+        // the logo "writes" itself in from top to bottom
+    animate($('.hero-logo'), { opacity: [0, 1], scale: [.9, 1], clipPath: ['inset(0% 0% 100% 0%)', 'inset(0% 0% 0% 0%)'] },
+      { delay: .7, duration: 1.6, ease: EASE });
   }
 
   // ---------------------------------------------------------------- gate

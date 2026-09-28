@@ -24,8 +24,8 @@ RSVPs are stored in `data/attendees.json` (git-ignored).
 
 ## What's inside
 
-- **Opening gate**: sage linen doors sealed with an S&W wax seal. Tapping it opens the doors in 3D, starts the music and asks iOS for motion permission.
-- **Welcome**: embroidered wreath monogram *S & W* and the welcome text.
+- **Opening envelope**: an ivory envelope sealed with the logo in red wax. Tapping cracks the seal, the flap swings open, the letter slides out and grows into the site. It also starts the music and asks iOS for motion permission. Add `?autoopen` to the URL to open it automatically for testing.
+- **Welcome**: the couple's calligraphic logo in an embroidered wreath, plus the welcome text.
 - **Countdown** to 20.10.2026 · 8 PM Cairo time, with swaying gold charms (they also lean with the phone's tilt) and small flying bluebirds that return throughout the site.
 - **Invitation**: families آل بلال وآل خباب, names, and the date.
 - **Location / date & time**: embroidered wisteria-and-rose card, directions (Google Maps), Google Calendar and Apple/iCal buttons. Rose petals drift across the site and react to scrolling and tilting.
@@ -59,14 +59,18 @@ The wedding time, the venue coordinates and the calendar event are in `public/js
 
 ## Link preview (WhatsApp / X / iMessage / Telegram)
 
-Pasting the link shows a preview image of the welcome screen (wreath monogram, welcome text, petals and bluebirds), plus a bilingual title and description with the date, doors-open time and venue.
+Pasting the link shows a preview image of the welcome screen (wreath and logo, welcome text, petals and bluebirds), plus a bilingual title and description with the date, doors-open time and venue.
 - The image is `public/og-image.jpg` (1200×630, about 50 KB). It's captured from `/?snapshot`, a mode that skips the gate and animations and hides the controls.
 - To regenerate it after changing the design: run `npm start`, then `npm run og` (needs Edge or Chrome).
   `npm run og -- card` captures the alternative designed bilingual card (`public/share-card.html`) instead.
 - The title, description and image are the `og:*` / `twitter:*` tags in `public/index.html`. They use absolute `https://samwadinvitation.vercel.app` URLs; update them if the domain changes.
 - WhatsApp and X cache previews. After changing the image, bump `?v=2` in the `og:image` URLs. If a chat already shows an old preview, share the link with `?v=3` (or any new value) added.
 
+## Logo
+
+The calligraphic logo is a vector traced from the supplied artwork. It's defined once as `#logoPath` in the hidden SVG defs of `public/index.html` and reused everywhere with `<use href="#logoPath">`: the welcome wreath, the envelope letter, the wax seals and the footer. It's drawn in the same olive-brown as the headings (`#5d5a45`, via `#logoGreen`), or in cream when pressed into the wax seals. The browser tab icon is `public/favicon.svg`.
+
 ## Fonts
 
-The monogram, seal and English script names use **Armelie** (`public/fonts/Armelie-Regular.otf`, from 1001fonts.com).
+The English script names use **Armelie** (`public/fonts/Armelie-Regular.otf`, from 1001fonts.com).
 Its licence is **free for personal use only**; commercial use needs a licence from brandsemut.com.
