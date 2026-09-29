@@ -29,7 +29,8 @@ const base = `http://localhost:${process.env.PORT || 3000}`;
 const url = mode === 'card' ? `${base}/share-card.html` : `${base}/?snapshot`;
 // The hero is laid out at a desktop size (1800×945) and scaled down to 1200×630.
 const [w, h, dsf] = mode === 'card' ? [1200, 630, 1] : [1800, 945, 2 / 3];
-const out = path.join(__dirname, '..', 'public', 'og-image.jpg');
+// WhatsApp caches previews per image URL: when the card changes, change this name (and the meta tags)
+const out = path.join(__dirname, '..', 'public', process.env.OG_NAME || 'og-invitation.jpg');
 const tmp = path.join(os.tmpdir(), 'samwad-og.jpeg');
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'samwad-og-'));
 fs.rmSync(tmp, { force: true });
@@ -49,4 +50,4 @@ if (!fs.existsSync(tmp)) {
   process.exit(1);
 }
 fs.copyFileSync(tmp, out);
-console.log(`og-image.jpg written (${Math.round(fs.statSync(out).size / 1024)} KB)`);
+console.log(`${path.basename(out)} written (${Math.round(fs.statSync(out).size / 1024)} KB)`);
