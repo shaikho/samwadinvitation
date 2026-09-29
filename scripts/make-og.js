@@ -1,7 +1,7 @@
 // Captures public/og-image.jpg, the WhatsApp / X / iMessage link preview (1200×630).
 // Needs the local server running (npm start) and Microsoft Edge or Google Chrome installed.
-//   npm run og            → screenshot of the site's welcome screen (/?snapshot)
-//   npm run og -- card    → the designed bilingual card (public/share-card.html)
+//   npm run og            → the bilingual invitation card (public/share-card.html) — the WhatsApp preview
+//   npm run og -- hero    → a screenshot of the site's welcome screen (/?snapshot) instead
 //   BROWSER="path/to/chrome" npm run og   to pick a specific browser
 const { execFileSync } = require('child_process');
 const fs = require('fs');
@@ -24,7 +24,7 @@ if (!browser) {
   process.exit(1);
 }
 
-const mode = process.argv[2] === 'card' ? 'card' : 'hero';
+const mode = process.argv[2] === 'hero' ? 'hero' : 'card';
 const base = `http://localhost:${process.env.PORT || 3000}`;
 const url = mode === 'card' ? `${base}/share-card.html` : `${base}/?snapshot`;
 // The hero is laid out at a desktop size (1800×945) and scaled down to 1200×630.

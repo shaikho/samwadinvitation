@@ -25,12 +25,16 @@
     .border { position: absolute; inset: 18px; border: 1.5px dashed rgba(184,151,95,.55); border-radius: 6px; }
     .border::after { content: ''; position: absolute; inset: 7px; border: 1px solid rgba(226,214,194,.9); border-radius: 3px; }
 
-    .sprig { position: absolute; width: 112px; }
-    .sprig svg { width: 100%; height: auto; display: block; }
-    .sprig.tl { top: -18px; left: -6px; transform: rotate(-50deg); }
-    .sprig.br { bottom: -18px; right: -6px; transform: rotate(130deg); }
-    .sprig.tr { top: -18px; right: -6px; transform: rotate(50deg) scaleX(-1); }
-    .sprig.bl { bottom: -18px; left: -6px; transform: rotate(-130deg) scaleX(-1); }
+    /* bridal-bouquet flowers: corner bouquets and eucalyptus garlands */
+    .bq, .gl { position: absolute; z-index: 0; }
+    .bq img, .gl img { display: block; width: 100%; height: auto; }
+    .bq { top: 18px; width: 176px; }
+    .bq.tl { left: 22px; }
+    .bq.tr { right: 22px; transform: scaleX(-1); }
+    .gl { bottom: 26px; width: 34px; -webkit-mask-image: linear-gradient(transparent, #000 15%); mask-image: linear-gradient(transparent, #000 15%); }
+    .gl.bl { left: 32px; }
+    .gl.br { right: 32px; transform: scaleX(-1); }
+    .col, .wreath, .date-under { z-index: 1; }
 
     .wreath { position: absolute; left: 50%; top: 50%; width: 380px; height: 380px; margin: -205px 0 0 -190px; }
     .wreath > div > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -57,10 +61,10 @@
 </head>
 <body>
   <div class="border"></div>
-  <div class="sprig tl" data-art="sprig"></div>
-  <div class="sprig tr" data-art="sprig"></div>
-  <div class="sprig bl" data-art="sprig"></div>
-  <div class="sprig br" data-art="sprig"></div>
+  <div class="bq tl" data-art="bouquet"></div>
+  <div class="bq tr" data-art="bouquetAlt"></div>
+  <div class="gl bl" data-art="garland"></div>
+  <div class="gl br" data-art="garland"></div>
 
   <div class="col en">
     <p class="kicker">Wedding Invitation</p>

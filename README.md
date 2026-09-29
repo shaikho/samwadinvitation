@@ -59,12 +59,11 @@ The wedding time, the venue coordinates and the calendar event are in `public/js
 
 ## Link preview (WhatsApp / X / iMessage / Telegram)
 
-Pasting the link shows a preview image of the welcome screen (wreath and logo, welcome text, petals and bluebirds), plus a bilingual title and description with the date, doors-open time and venue.
-- The image is `public/og-image.jpg` (1200×630, about 50 KB). It's captured from `/?snapshot`, a mode that skips the gate and animations and hides the controls.
-- To regenerate it after changing the design: run `npm start`, then `npm run og` (needs Edge or Chrome).
-  `npm run og -- card` captures the alternative designed bilingual card (`public/share-card.html`) instead.
-- The title, description and image are the `og:*` / `twitter:*` tags in `public/index.html`. They use absolute `https://samwadinvitation.vercel.app` URLs; update them if the domain changes.
-- WhatsApp and X cache previews. After changing the image, bump `?v=2` in the `og:image` URLs. If a chat already shows an old preview, share the link with `?v=3` (or any new value) added.
+Pasting the link shows the invitation card: the logo in its wreath, both names, the date, the doors-open time and the venue in Arabic and English, framed by the bridal-bouquet flowers. A bilingual title and description go with it.
+- The image is `public/og-image.jpg` (1200×630, about 100 KB), rendered from `public/share-card.html`.
+- To regenerate it after editing the card: run `npm start`, then `npm run og` (needs Edge or Chrome). `npm run og -- hero` captures the welcome screen instead.
+- The title, description and image are the `og:*`, `itemprop` and `twitter:*` tags at the top of `public/index.html`. They use absolute `https://samwadinvitation.vercel.app` URLs; update them if the domain changes.
+- WhatsApp caches previews per image URL. After changing the image, bump the `?v=` number in those tags (currently `v=3`).
 
 ## Logo
 
