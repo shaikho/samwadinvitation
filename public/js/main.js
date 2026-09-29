@@ -154,11 +154,67 @@
   }
   if (!reduced) requestAnimationFrame(tiltLoop);
 
+  // ---------------------------------------------------------------- bakhoor smoke (Jertig theme)
+  // Each tile is painted once into a canvas (soft radial puffs along rising, swaying paths),
+  // wrapped top-to-bottom and side-to-side so it tiles seamlessly, then used as a background image.
+  function paintSmoke(w, h, seed, tint) {
+    let a = seed >>> 0;
+    const rnd = () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    const c = document.createElement('canvas');
+    c.width = w / 2; c.height = h / 2;
+    const g = c.getContext('2d');
+    g.scale(.5, .5); // painted at half resolution: invisible on soft smoke, 4× less work
+    const puff = (x, y, r, alpha) => {
+      for (const dx of [-w, 0, w]) for (const dy of [-h, 0, h]) {
+        const px = x + dx, py = y + dy;
+        if (px + r < 0 || px - r > w || py + r < 0 || py - r > h) continue;
+        const grad = g.createRadialGradient(px, py, 0, px, py, r);
+        grad.addColorStop(0, `rgba(${tint}, ${alpha})`);
+        grad.addColorStop(1, `rgba(${tint}, 0)`);
+        g.fillStyle = grad;
+        g.fillRect(px - r, py - r, r * 2, r * 2);
+      }
+    };
+    // a faint haze first
+    for (let i = 0; i < 7; i++) puff(rnd() * w, rnd() * h, 110 + rnd() * 110, 0.008 + rnd() * 0.008);
+    // incense ribbons: thin and bright where they rise, then swaying wider, curling and fading
+    const wisps = 4;
+    for (let k = 0; k < wisps; k++) {
+      const x0 = rnd() * w, phase = rnd() * 6.28, base = 30 + rnd() * 45, freq = .8 + rnd() * 1.2, tw = 20 + rnd() * 14;
+      const steps = 150;
+      for (let i = 0; i < steps; i++) {
+        const t = i / steps;
+        const y = h * (1 - t);
+        const amp = base * (0.25 + 1.5 * t);
+        const curl = Math.sin(t * tw + phase) * 14 * t;
+        const x = x0 + Math.sin(t * Math.PI * 2 * freq + phase) * amp + curl;
+        const r = 5 + 40 * Math.pow(t, 1.3) + rnd() * 4;
+        const alpha = 0.05 * Math.pow(1 - t, 0.8) + 0.005;
+        puff(x, y, r, alpha);
+      }
+    }
+    return new Promise((resolve) => c.toBlob((b) => resolve(b ? URL.createObjectURL(b) : c.toDataURL()), 'image/png'));
+  }
+  // paint during idle time, but no later than 3s after load so it's ready long before the Jertig
+  const whenIdle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 3000 }) : setTimeout(fn, 1200));
+  if (!reduced) whenIdle(async () => {
+    const layers = [['.jertig-smoke.s1', 520, 1040, 11, '255, 236, 214'], ['.jertig-smoke.s2', 680, 1360, 23, '255, 214, 170'], ['.jertig-smoke.s3', 440, 880, 37, '255, 246, 230']];
+    for (const [sel, w, h, seed, tint] of layers) {
+      const url = await paintSmoke(w, h, seed, tint);
+      const el = $(sel);
+      if (el) el.style.backgroundImage = `url("${url}")`;
+    }
+  });
+
   // ---------------------------------------------------------------- petals canvas
   const Petals = (function () {
     const cv = $('.petals');
     const ctx = cv.getContext('2d');
-    const colors = ['#eab7be', '#f3d2d0', '#d99aa5', '#f7e4dc', '#cdbfe4', '#f0c9c4'];
+    const palettes = {
+      garden: ['#eab7be', '#f3d2d0', '#d99aa5', '#f7e4dc', '#cdbfe4', '#f0c9c4'],
+      jertig: ['#c8161f', '#e03a2f', '#f2c14e', '#f7d77f', '#a3161d', '#ffb347'],
+    };
+    let colors = palettes.garden;
     const list = [];
     let W = 0, H = 0, dpr = 1, lastY = scrollY, last = performance.now();
     const ambient = isSmall ? 9 : 16;
@@ -186,7 +242,7 @@
     }
     // a joyful explosion: a ring shockwave, then hearts, petals and gold sparks under gravity
     function celebrate(x, y) {
-      const n = isSmall ? 70 : 110;
+      const n = isSmall ? 55 : 85;
       const hearts = ['#c9566b', '#e38a9b', '#b86f7e', '#f0b3bd'];
       const golds = ['#f3d38a', '#e8c36e', '#fff1c7'];
       list.push({ x, y, vx: 0, vy: 0, s: 0, rot: 0, vr: 0, flip: 0, vf: 0, c: '#d8b46a', a: 1, life: 70, kind: 'ring', boom: true, r: 6 });
@@ -220,8 +276,9 @@
         ctx.save();
         ctx.globalAlpha = p.a * (.6 + .4 * Math.sin(p.flip * 3));
         ctx.fillStyle = p.c;
-        ctx.shadowColor = p.c; ctx.shadowBlur = 8;
         ctx.beginPath(); ctx.arc(p.x, p.y, p.s * .32, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha *= .25;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.s * .75, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
         return;
       }
@@ -309,7 +366,12 @@
     function scatter(n) {
       for (let i = 0; i < n; i++) spawn({ y: Math.random() * H, a: 1, vy: .05, vx: 0 });
     }
-    return { start, scatter, burst: reduced ? () => {} : burst, celebrate: reduced ? () => {} : celebrate };
+    // switch palette; drifting petals change colour as they are replaced
+    function setPalette(name) {
+      colors = palettes[name] || palettes.garden;
+      for (const p of list) if (p.kind === 'petal' && Math.random() < .6) p.c = colors[(Math.random() * colors.length) | 0];
+    }
+    return { start, scatter, setPalette, burst: reduced ? () => {} : burst, celebrate: reduced ? () => {} : celebrate };
   })();
 
   // ---------------------------------------------------------------- little blue birds
@@ -580,9 +642,33 @@
     const line = $('.tl-line');
     let lineH = line.offsetHeight;
     addEventListener('resize', () => { lineH = line.offsetHeight; });
+    // Jertig theme: switches on when the pearl reaches the jertig icon, off again above it
+    const jertigItem = $('[data-icon="jertig"]').closest('.tl-item');
+    let jertigAt = 0;
+    const measureJertig = () => {
+      const icon = $('.tl-icon', jertigItem);
+      jertigAt = (jertigItem.offsetTop + icon.offsetTop + icon.offsetHeight / 2) - line.offsetTop;
+    };
+    measureJertig();
+    addEventListener('resize', measureJertig);
+    let jertigOn = false;
+    const themeMeta = $('meta[name="theme-color"]');
+    function setJertig(on) {
+      if (on === jertigOn) return;
+      jertigOn = on;
+      document.documentElement.classList.toggle('theme-jertig', on);
+      Petals.setPalette(on ? 'jertig' : 'garden');
+      if (themeMeta) themeMeta.content = on ? '#8a1117' : '#f4eee3';
+      if (on) {
+        const r = $('.tl-icon', jertigItem).getBoundingClientRect();
+        Petals.celebrate(r.left + r.width / 2, r.top + r.height / 2);
+      }
+    }
+
     scroll((p) => {
       fill.style.transform = `scaleY(${p})`;
       pearlDot.style.transform = `translate3d(0, ${(p * lineH).toFixed(1)}px, 0)`;
+      setJertig(p * lineH >= jertigAt);
     }, { target: tl, offset: ['start 70%', 'end 55%'] });
 
     $$('.tl-item').forEach((item, i) => {
@@ -802,6 +888,11 @@
   const snapshotAt = new URLSearchParams(location.search).get('snapshot');
   if (snapshotAt !== null) {
     document.documentElement.classList.add('snapshot');
+    // &theme=jertig previews the Jertig theme
+    if (new URLSearchParams(location.search).get('theme') === 'jertig') {
+      document.documentElement.classList.add('theme-jertig');
+      Petals.setPalette('jertig');
+    }
     $('.gate').remove();
     document.body.classList.remove('is-locked');
     // final states only (CSS .snapshot rules) so the capture never lands mid-animation

@@ -294,6 +294,185 @@
     return s + '</g></svg>';
   }
 
+  // ---------- Bridal bouquet flowers (anthurium, peony, tulip, orchid, calla, eucalyptus, amaranthus) ----------
+  // Palette taken from the bride's reference bouquet: blush and candy pinks, bright whites,
+  // silver-green eucalyptus and cream trailing amaranthus.
+  const B = {
+    pinks: [['#c95f7c', '#e391a6', '#f6cdd6'], ['#d77892', '#eca9b8', '#f9dde2'], ['#bf5270', '#df8aa0', '#f3c2cd']],
+    anth: ['#e39aad', '#f0bccb'],
+    tulip: ['#e27592', '#f2a4b6', '#f9ccd6'],
+    white: '#fcfaf6', whiteEdge: '#e4dbd0', whiteShade: '#efe8df',
+    euc: ['#9db3a2', '#8aa493', '#b4c7b6'], eucStem: '#7f8f76',
+    amar: ['#d9ccb2', '#cbbc9e', '#e6dcc8'],
+    spadix: '#efe0a8',
+  };
+
+  // ruffled peony / lisianthus: layered wavy petals
+  function peony(x, y, r, tone, rot = 0) {
+    const [deep, mid, light] = tone;
+    let s = `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)})"><g class="bloom">`;
+    const ring = (n, rad, rx, ry, fill, stroke, off) => {
+      for (let i = 0; i < n; i++) {
+        const a = ((i * 360) / n + off) * Math.PI / 180;
+        const cx = Math.cos(a) * rad, cy = Math.sin(a) * rad;
+        s += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(rx)}" ry="${f(ry)}" transform="rotate(${f((i * 360) / n + off)} ${f(cx)} ${f(cy)})" fill="${fill}" stroke="${stroke}" stroke-width=".7" stroke-dasharray="2.2 1.2"/>`;
+      }
+    };
+    ring(9, r * .58, r * .5, r * .4, light, mid, 0);
+    ring(7, r * .38, r * .42, r * .33, mid, deep, 20);
+    ring(5, r * .2, r * .32, r * .26, light, mid, 45);
+    s += `<circle r="${f(r * .16)}" fill="${deep}"/>`;
+    // ruffle highlights
+    for (let i = 0; i < 6; i++) {
+      const a = (i * 60 + 15) * Math.PI / 180;
+      s += `<path d="M${f(Math.cos(a) * r * .3)} ${f(Math.sin(a) * r * .3)}q${f(Math.cos(a + .6) * r * .25)} ${f(Math.sin(a + .6) * r * .25)} ${f(Math.cos(a) * r * .5)} ${f(Math.sin(a) * r * .5)}" stroke="#fff" stroke-width=".8" opacity=".5" fill="none"/>`;
+    }
+    return s + '</g></g>';
+  }
+
+  // anthurium: glossy heart-shaped spathe with a cream spadix
+  function anthurium(x, y, sz, rot = 0) {
+    const k = sz;
+    const spathe = `M0 ${f(-.35 * k)}C${f(-.35 * k)} ${f(-.95 * k)} ${f(-1.05 * k)} ${f(-.55 * k)} ${f(-.8 * k)} ${f(.05 * k)}C${f(-.6 * k)} ${f(.5 * k)} ${f(-.2 * k)} ${f(.75 * k)} 0 ${f(1 * k)}C${f(.2 * k)} ${f(.75 * k)} ${f(.6 * k)} ${f(.5 * k)} ${f(.8 * k)} ${f(.05 * k)}C${f(1.05 * k)} ${f(-.55 * k)} ${f(.35 * k)} ${f(-.95 * k)} 0 ${f(-.35 * k)}Z`;
+    let veins = '';
+    for (let i = -3; i <= 3; i++) {
+      const a = (90 + i * 24) * Math.PI / 180;
+      veins += `M0 ${f(-.2 * k)}Q${f(Math.cos(a) * .45 * k)} ${f(-.2 * k + Math.sin(a) * .35 * k)} ${f(Math.cos(a) * .7 * k)} ${f(-.2 * k + Math.sin(a) * .8 * k)}`;
+    }
+    return `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)})"><g class="bloom">
+      <path d="${spathe}" fill="${B.anth[0]}" stroke="#c97a8f" stroke-width=".8"/>
+      <path d="${spathe}" fill="${B.anth[1]}" opacity=".55" transform="scale(.82) translate(0 ${f(-.06 * k)})"/>
+      <path d="${veins}" stroke="#cf8196" stroke-width=".7" fill="none" opacity=".7"/>
+      <path d="M0 ${f(-.2 * k)}q${f(.22 * k)} ${f(-.35 * k)} ${f(.08 * k)} ${f(-.78 * k)}" stroke="${B.spadix}" stroke-width="${f(.13 * k)}" stroke-linecap="round" fill="none"/>
+      <path d="M0 ${f(-.2 * k)}q${f(.22 * k)} ${f(-.35 * k)} ${f(.08 * k)} ${f(-.78 * k)}" stroke="#d8c585" stroke-width=".8" stroke-dasharray="1 1.4" fill="none"/>
+    </g></g>`;
+  }
+
+  // tulip: a closed cup of petals on a stem
+  function tulip(x, y, sz, rot = 0) {
+    const k = sz;
+    return `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)})">
+      <path d="M0 ${f(.1 * k)}L0 ${f(1.5 * k)}" stroke="${C.stem}" stroke-width="1.4"/>
+      ${leaf(0, 1.2 * k, -70, .9 * k, C.leaves[0])}
+      <g class="bloom">
+      <path d="M${f(-.42 * k)} 0C${f(-.5 * k)} ${f(-.6 * k)} ${f(-.12 * k)} ${f(-.95 * k)} 0 ${f(-1.02 * k)}C${f(.12 * k)} ${f(-.95 * k)} ${f(.5 * k)} ${f(-.6 * k)} ${f(.42 * k)} 0C${f(.3 * k)} ${f(.3 * k)} ${f(-.3 * k)} ${f(.3 * k)} ${f(-.42 * k)} 0Z" fill="${B.tulip[0]}" stroke="#c75a78" stroke-width=".7"/>
+      <path d="M${f(-.2 * k)} ${f(.12 * k)}C${f(-.35 * k)} ${f(-.4 * k)} ${f(-.05 * k)} ${f(-.85 * k)} ${f(.12 * k)} ${f(-.9 * k)}C${f(.3 * k)} ${f(-.6 * k)} ${f(.3 * k)} ${f(-.1 * k)} ${f(.18 * k)} ${f(.14 * k)}Z" fill="${B.tulip[1]}"/>
+      <path d="M${f(-.05 * k)} ${f(-.1 * k)}C${f(-.12 * k)} ${f(-.45 * k)} 0 ${f(-.7 * k)} ${f(.08 * k)} ${f(-.78 * k)}" stroke="${B.tulip[2]}" stroke-width="1" fill="none" stroke-dasharray="2 1.4"/>
+      </g></g>`;
+  }
+
+  // phalaenopsis orchid: three sepals, two wide petals, a small blush lip
+  function orchid(x, y, sz, rot = 0) {
+    const k = sz;
+    let s = `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)})"><g class="bloom">`;
+    for (const a of [-90, 30, 150]) {
+      const r = a * Math.PI / 180, cx = Math.cos(r) * .55 * k, cy = Math.sin(r) * .55 * k;
+      s += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(.6 * k)}" ry="${f(.25 * k)}" transform="rotate(${a} ${f(cx)} ${f(cy)})" fill="${B.white}" stroke="${B.whiteEdge}" stroke-width=".7"/>`;
+    }
+    for (const a of [-20, 200]) {
+      const r = a * Math.PI / 180, cx = Math.cos(r) * .5 * k, cy = Math.sin(r) * .5 * k;
+      s += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="${f(.58 * k)}" ry="${f(.46 * k)}" transform="rotate(${a} ${f(cx)} ${f(cy)})" fill="${B.white}" stroke="${B.whiteEdge}" stroke-width=".7"/>`;
+    }
+    s += `<ellipse cx="0" cy="${f(.28 * k)}" rx="${f(.2 * k)}" ry="${f(.16 * k)}" fill="#f2b6c3"/>`;
+    s += `<circle r="${f(.12 * k)}" fill="#f6d98f"/><circle cy="${f(.05 * k)}" r="${f(.05 * k)}" fill="#e39aad"/>`;
+    return s + '</g></g>';
+  }
+
+  // calla lily: a white trumpet on a long stem
+  function calla(x, y, sz, rot = 0) {
+    const k = sz;
+    return `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(rot)})">
+      <path d="M0 0L0 ${f(1.6 * k)}" stroke="${C.stem}" stroke-width="1.5"/>
+      <g class="bloom">
+      <path d="M0 0C${f(-.3 * k)} ${f(-.3 * k)} ${f(-.45 * k)} ${f(-.8 * k)} ${f(-.1 * k)} ${f(-1.1 * k)}C${f(.2 * k)} ${f(-1.3 * k)} ${f(.55 * k)} ${f(-1.1 * k)} ${f(.65 * k)} ${f(-.98 * k)}C${f(.38 * k)} ${f(-.92 * k)} ${f(.26 * k)} ${f(-.6 * k)} ${f(.15 * k)} ${f(-.28 * k)}Z" fill="${B.white}" stroke="${B.whiteEdge}" stroke-width=".8"/>
+      <path d="M${f(.02 * k)} ${f(-.1 * k)}C${f(-.15 * k)} ${f(-.45 * k)} ${f(-.12 * k)} ${f(-.85 * k)} ${f(.1 * k)} ${f(-1 * k)}" stroke="${B.whiteShade}" stroke-width="${f(.12 * k)}" fill="none" stroke-linecap="round"/>
+      <path d="M${f(.05 * k)} ${f(-.35 * k)}l${f(.04 * k)} ${f(-.35 * k)}" stroke="#f0cf6e" stroke-width="${f(.07 * k)}" stroke-linecap="round"/>
+      </g></g>`;
+  }
+
+  // eucalyptus: a stem with round silver-green leaves
+  function eucalyptus(x, y, len, ang, r) {
+    const a = ang * Math.PI / 180;
+    const ex = x + Math.cos(a) * len, ey = y + Math.sin(a) * len;
+    const bend = 12 * (r() - .5);
+    let s = `<path d="M${f(x)} ${f(y)}Q${f((x + ex) / 2 + Math.cos(a + 1.57) * bend)} ${f((y + ey) / 2 + Math.sin(a + 1.57) * bend)} ${f(ex)} ${f(ey)}" stroke="${B.eucStem}" stroke-width="1.1" fill="none"/>`;
+    const n = Math.max(3, Math.round(len / 14));
+    for (let i = 1; i <= n; i++) {
+      const t = i / (n + .4);
+      const px = x + (ex - x) * t, py = y + (ey - y) * t;
+      const lr = 7.5 * (1 - t * .45);
+      for (const side of [-1, 1]) {
+        const off = a + side * 1.57;
+        const cx = px + Math.cos(off) * lr * .9, cy = py + Math.sin(off) * lr * .9;
+        s += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(lr)}" fill="${B.euc[(i + (side > 0 ? 1 : 0)) % 3]}" stroke="#7e9784" stroke-width=".5"/>`;
+        s += `<path d="M${f(px)} ${f(py)}L${f(cx)} ${f(cy)}" stroke="#c8d6c9" stroke-width=".5" opacity=".7"/>`;
+      }
+    }
+    return s;
+  }
+
+  // amaranthus: trailing tassels of tiny cream beads
+  function amaranthus(x, y, len, r) {
+    let s = `<g class="sway" style="transform-origin:${f(x)}px ${f(y)}px">`;
+    const strands = 3;
+    for (let k = 0; k < strands; k++) {
+      const x0 = x + (k - 1) * 5, l = len * (.75 + r() * .3), ph = r() * 6;
+      for (let t = 0; t < l; t += 3.4) {
+        const w = 3.2 * (1 - t / l * .6);
+        const bx = x0 + Math.sin(t / 18 + ph) * (4 + t / 14);
+        s += `<ellipse cx="${f(bx + (r() - .5) * w)}" cy="${f(y + t)}" rx="${f(w * .55)}" ry="${f(w * .42)}" fill="${B.amar[(t | 0) % 3]}" stroke="#b8a888" stroke-width=".3"/>`;
+      }
+    }
+    return s + '</g>';
+  }
+
+  // a lush bouquet cluster that sits fully inside its 340×340 box (nothing is clipped at the edges),
+  // placed near a corner of a section; mirror it with CSS for the other side
+  function cornerBouquet(seed = 5) {
+    const r = rng(seed);
+    const cx = 130, cy = 118;
+    let s = '<svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g filter="url(#emb)">';
+    // greenery radiating from the heart of the bouquet, every tip kept inside the box
+    [[-160, 105], [-122, 92], [-62, 92], [-22, 140], [14, 150], [58, 105], [118, 96], [168, 100]].forEach(([ang, len]) => { s += eucalyptus(cx, cy, len, ang, r); });
+    s += leaf(cx, cy, 200, 56, C.leaves[1]) + leaf(cx, cy, -40, 52, C.leaves[3]) + leaf(cx, cy, 100, 48, C.leaves[0]) + leaf(cx, cy, -130, 46, C.leaves[2]);
+    // trailing amaranthus
+    s += amaranthus(108, 158, 135, r) + amaranthus(150, 164, 115, r) + amaranthus(80, 150, 105, r);
+    // calla lilies reaching outward
+    s += calla(214, 76, 30, 70) + calla(58, 92, 28, -72) + calla(196, 152, 24, 118);
+    // the heart of the bouquet
+    s += peony(120, 108, 32, B.pinks[0], 10);
+    s += anthurium(176, 92, 32, -35);
+    s += peony(166, 136, 23, B.pinks[1], 40);
+    s += peony(84, 140, 21, B.pinks[2], 70);
+    s += orchid(216, 118, 16, 10) + orchid(104, 176, 15, 40) + orchid(70, 106, 13, -20);
+    s += tulip(244, 84, 14, 62) + tulip(204, 186, 13, 128) + tulip(58, 168, 13, 160);
+    s += rose(150, 72, 11, C.roses[1], 20) + rose(96, 78, 10, C.roses[0], 50);
+    for (let i = 0; i < 10; i++) s += knot(60 + r() * 170, 60 + r() * 130, 1.8, pick(r, ['#fbf6ec', '#f6cdd6', '#e6dcc8']));
+    return s + '</g></svg>';
+  }
+
+  // a slim vertical garland for card edges: eucalyptus with small blooms
+  function sideGarland(seed = 9) {
+    const r = rng(seed);
+    let s = '<svg viewBox="0 0 70 600" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g filter="url(#emb)">';
+    const pts = [];
+    for (let y = 8; y <= 592; y += 9) pts.push([35 + Math.sin(y / 38) * 9, y]);
+    s += `<path d="M${pts.map((p) => p.map(f).join(' ')).join('L')}" stroke="${B.eucStem}" stroke-width="1.2" fill="none"/>`;
+    pts.forEach(([x, y], i) => {
+      if (i % 2 === 0) {
+        s += `<circle cx="${f(x - 7)}" cy="${f(y)}" r="5.5" fill="${B.euc[i % 3]}" stroke="#7e9784" stroke-width=".5"/>`;
+        s += `<circle cx="${f(x + 7)}" cy="${f(y + 4)}" r="5" fill="${B.euc[(i + 1) % 3]}" stroke="#7e9784" stroke-width=".5"/>`;
+      }
+    });
+    [[70, 'p'], [150, 'o'], [230, 't'], [310, 'p'], [390, 'o'], [470, 't'], [545, 'p']].forEach(([y, kind], i) => {
+      const x = 35 + Math.sin(y / 38) * 9;
+      if (kind === 'p') s += peony(x, y, 13, B.pinks[i % 3], i * 30);
+      else if (kind === 'o') s += orchid(x, y, 10, i * 25);
+      else s += tulip(x, y - 4, 9, i % 2 ? 20 : -20);
+    });
+    return s + '</g></svg>';
+  }
+
   // ---------- Timeline icons (line art, drawn on scroll) ----------
   const icons = {
     doors: `<svg viewBox="0 0 100 100" aria-hidden="true"><g class="draw" fill="none" stroke="${C.gold}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -338,6 +517,9 @@
   window.Art = {
     frame: () => asImage(frame(), 'art-img') + frameThreads(),
     arch: () => asImage(arch(), 'art-img'),
+    bouquet: () => asImage(cornerBouquet(5), 'art-img'),
+    bouquetAlt: () => asImage(cornerBouquet(12), 'art-img'),
+    garland: () => asImage(sideGarland(9), 'art-img'),
     wreath, divider, sprig, icons,
   };
 })();

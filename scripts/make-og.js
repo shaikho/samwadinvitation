@@ -41,6 +41,9 @@ execFileSync(browser, [
   `--screenshot=${tmp}`, url,
 ], { stdio: 'ignore' });
 
+// Edge sometimes finishes writing the file just after it exits: wait for it briefly
+const until = Date.now() + 5000;
+while (!fs.existsSync(tmp) && Date.now() < until) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 150);
 if (!fs.existsSync(tmp)) {
   console.error('The browser did not produce a screenshot. Is the server running (npm start)?');
   process.exit(1);
