@@ -304,14 +304,35 @@
       <circle pathLength="1" cx="50" cy="54" r="24"/><circle pathLength="1" cx="50" cy="54" r="16"/>
       <path pathLength="1" d="M14 30v18a5 5 0 0 0 10 0V30M19 30v62"/><path pathLength="1" d="M84 30c-8 6-8 22 0 26v36"/></g>
       <g filter="url(#emb)">${rose(50, 54, 8, C.roses[2])}${leaf(50, 54, 200, 14, C.leaves[1])}${leaf(50, 54, -20, 14, C.leaves[0])}</g></svg>`,
-    cake: `<svg viewBox="0 0 100 100" aria-hidden="true"><g class="draw" fill="none" stroke="${C.gold}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path pathLength="1" d="M22 90V70h56v20"/><path pathLength="1" d="M30 70V52h40v18"/><path pathLength="1" d="M38 52V38h24v14"/>
-      <path pathLength="1" d="M14 90h72"/><path pathLength="1" d="M22 78q7 5 14 0t14 0 14 0 14 0"/><path pathLength="1" d="M30 60q5 4 10 0t10 0 10 0 10 0"/></g>
-      <g filter="url(#emb)">${rose(50, 32, 7, C.roses[0])}${leaf(50, 32, 200, 12, C.leaves[0])}${leaf(50, 32, -20, 12, C.leaves[2])}${pearl(26, 70, 2.5)}${pearl(74, 70, 2.5)}</g></svg>`,
-    farewell: `<svg viewBox="0 0 100 100" aria-hidden="true"><g class="draw" fill="none" stroke="${C.gold}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path pathLength="1" d="M62 16a30 30 0 1 0 22 44A26 26 0 0 1 62 16z"/>
-      <path pathLength="1" d="M26 20v10M21 25h10M80 76v8M76 80h8M18 70v6M15 73h6"/></g>
-      <g filter="url(#emb)">${leaf(40, 78, 190, 14, C.leaves[1])}${rose(44, 78, 7, C.roses[1])}${flower(58, 80, 4.5)}</g></svg>`,
+    // the zaffa: a frame drum (daf) with jingles, and music notes
+    zaffa: `<svg viewBox="0 0 100 100" aria-hidden="true"><g class="draw" fill="none" stroke="${C.gold}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle pathLength="1" cx="44" cy="58" r="28"/><circle pathLength="1" cx="44" cy="58" r="22"/>
+      <path pathLength="1" d="M44 30v6M44 80v6M16 58h6M66 58h6"/>
+      <path pathLength="1" d="M78 16v18"/><path pathLength="1" d="M78 16l10 3v6l-10-3"/><path pathLength="1" d="M78 34a4 3.2 0 1 1-4-3"/>
+      <path pathLength="1" d="M88 44v10a3 2.4 0 1 1-3-2.2"/></g>
+      <g filter="url(#emb)">${rose(44, 58, 8, C.roses[0])}${leaf(44, 58, 200, 12, C.leaves[1])}${leaf(44, 58, -20, 12, C.leaves[0])}${pearl(44, 33, 2.4)}${pearl(44, 83, 2.4)}${pearl(19, 58, 2.4)}${pearl(69, 58, 2.4)}</g></svg>`,
+    // the jertig: a Sudanese clay incense burner (مبخر) — a round bowl on a narrow waist and flared foot,
+    // painted with a band of triangles, embers glowing on the rim and bakhoor smoke rising
+    jertig: `<svg viewBox="0 0 100 100" aria-hidden="true">
+      <g filter="url(#emb)">
+        <path d="M31 50L36 58L41 50L46 58L51 50L56 58L61 50L66 58L69 52Z" fill="#c98491" opacity=".85"/>
+        <path d="M36 58L41 50L46 58ZM46 58L51 50L56 58ZM56 58L61 50L66 58Z" fill="#d8c192"/>
+        <circle cx="44" cy="44" r="2.2" fill="#e3a15b"/><circle cx="51" cy="43.4" r="2.6" fill="#d9774f"/><circle cx="57" cy="44.2" r="2" fill="#e3a15b"/>
+        ${pearl(40, 84, 1.8)}${pearl(50, 86, 1.8)}${pearl(60, 84, 1.8)}
+      </g>
+      <g class="draw" fill="none" stroke="${C.gold}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse pathLength="1" cx="50" cy="45" rx="23" ry="4.5"/>
+        <path pathLength="1" d="M27 45c0 14 10 22 23 22s23-8 23-22"/>
+        <path pathLength="1" d="M30 50h40M33 58h34"/>
+        <path pathLength="1" d="M44 67l2 7h8l2-7"/>
+        <path pathLength="1" d="M46 74c-6 4-11 10-13 17h34c-2-7-7-13-13-17"/>
+        <path pathLength="1" d="M44 38c-6-5 5-9 0-15"/><path pathLength="1" d="M51 36c6-6-6-10 0-17"/><path pathLength="1" d="M58 38c5-5-5-9 0-14"/>
+      </g></svg>`,
+    // farewell: two interlocking hearts
+    hearts: `<svg viewBox="0 0 100 100" aria-hidden="true"><g class="draw" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path pathLength="1" stroke="${C.gold}" transform="translate(40 52) rotate(-14) scale(1.45)" d="M0 14C-16 4-20-8-12-15-6-20 0-15 0-10 0-15 6-20 12-15 20-8 16 4 0 14Z"/>
+      <path pathLength="1" stroke="#b86f7e" transform="translate(61 57) rotate(14) scale(1.45)" d="M0 14C-16 4-20-8-12-15-6-20 0-15 0-10 0-15 6-20 12-15 20-8 16 4 0 14Z"/></g>
+      <g filter="url(#emb)">${leaf(50, 88, 200, 12, C.leaves[1])}${leaf(50, 88, -20, 12, C.leaves[0])}${rose(50, 88, 5, C.roses[1])}</g></svg>`,
   };
 
   window.Art = {

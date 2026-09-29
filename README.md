@@ -15,12 +15,12 @@ Open http://localhost:3000 (add `?lang=en` to open in English).
 | Route | What it is |
 |---|---|
 | `/` | The invitation |
-| `/attendees` (also `/addendies`) | Guest list: everyone who RSVP'd, with search and CSV export. No password. |
+| `/messages` (also `/attendees`, `/addendies`) | Private messages to the couple: sender, message, IP and location, browser details, with search and CSV export. No password. |
 | `/wedding.ics` | Calendar file (Apple Calendar / Outlook / iCal) |
-| `/api/rsvp` | `POST {"name": "…"}` saves a guest |
-| `/api/attendees` | `GET` the raw list as JSON |
+| `/api/message` | `POST {"name": "…", "message": "…"}` saves a message (the server adds IP, location and user-agent) |
+| `/api/messages` | `GET` all messages as JSON |
 
-RSVPs are stored in `data/attendees.json` (git-ignored).
+Locally, messages are stored in `data/messages.json` (git-ignored).
 
 ## What's inside
 
@@ -31,7 +31,7 @@ RSVPs are stored in `data/attendees.json` (git-ignored).
 - **Location / date & time**: embroidered wisteria-and-rose card, directions (Google Maps), Google Calendar and Apple/iCal buttons. Rose petals drift across the site and react to scrolling and tilting.
 - **Our story**: floral arch.
 - **Timeline**: a thread that draws as you scroll, with icons stitched in on view.
-- **RSVP**: asks for the guest's name only.
+- **Message to the couple**: guests send a private note with their name; the form is replaced by a burst of hearts, petals and gold sparks and a thank-you. The server records the sender's IP (with Vercel's country/city), user-agent, screen, time zone and language.
 - **3D background**: layered bokeh, flowers and pearls that move with the phone's gyroscope (or the mouse on desktop).
 - **Music**: see `public/audio/README.md`. The volume rises from ~5% to ~70% as the guest scrolls down.
 
@@ -40,20 +40,20 @@ All artwork is generated SVG (`public/js/art.js`), so there are no image files t
 
 ## Editing content
 
-All text, in both languages, is in `public/js/i18n.js`: names, families, story, timeline items, RSVP deadline.
+All text, in both languages, is in `public/js/i18n.js`: names, families, story, timeline items, message form wording.
 The wedding time, the venue coordinates and the calendar event are in `public/js/main.js` (`WEDDING`, `VENUE`, `updateCalendarLinks`) and `server.js` (`/wedding.ics`).
 
 ## Hosting on Vercel
 
 - `public/` is served as static files (`vercel.json` → `outputDirectory`). `/attendees` and `/addendies` are rewrites.
-- `api/rsvp.js` and `api/attendees.js` run as serverless functions and share `lib/store.js` with the local server.
-- Vercel's filesystem is read-only, so RSVPs are stored in **Vercel Blob**:
+- `api/message.js` and `api/messages.js` run as serverless functions and share `lib/store.js` with the local server.
+- Vercel's filesystem is read-only, so messages are stored in **Vercel Blob**:
   1. Vercel dashboard → your project → **Storage** → **Create** → **Blob** → connect it to this project.
      This adds the `BLOB_READ_WRITE_TOKEN` environment variable.
   2. Redeploy.
 
-  Without the Blob store, the RSVP button shows an error on the live site.
-- Locally (no token) RSVPs go to `data/attendees.json`.
+  Without the Blob store, sending a message shows an error on the live site.
+- Locally (no token) messages go to `data/messages.json`.
 - `public/vendor/motion.js` is a committed copy of the Motion bundle, because Vercel doesn't serve `node_modules`.
   After upgrading `motion`, run `npm run vendor` to refresh it.
 

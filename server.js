@@ -2,7 +2,7 @@
 // api/*.js run as serverless functions — both share lib/store.js.
 const express = require('express');
 const path = require('path');
-const { rsvpHandler, attendeesHandler } = require('./lib/store');
+const { messageHandler, messagesHandler } = require('./lib/store');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -10,10 +10,11 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 
 app.use(express.json({ limit: '10kb' }));
 
-app.all('/api/rsvp', rsvpHandler);
-app.get('/api/attendees', attendeesHandler);
+app.set('trust proxy', true); // so the sender's IP is read from X-Forwarded-For behind a proxy
+app.all('/api/message', messageHandler);
+app.get('/api/messages', messagesHandler);
 
-app.get(['/attendees', '/addendies'], (req, res) => {
+app.get(['/attendees', '/addendies', '/messages'], (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'attendees.html'));
 });
 

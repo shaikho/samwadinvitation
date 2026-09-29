@@ -3,7 +3,8 @@
   "outputDirectory": "public",
   "rewrites": [
     { "source": "/attendees", "destination": "/attendees.html" },
-    { "source": "/addendies", "destination": "/attendees.html" }
+    { "source": "/addendies", "destination": "/attendees.html" },
+    { "source": "/messages", "destination": "/attendees.html" }
   ],
   "headers": [
     {

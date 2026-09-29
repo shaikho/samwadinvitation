@@ -1,4 +1,5 @@
 node_modules/
 data/attendees.json
+data/messages.json
 .DS_Store
 Thumbs.db

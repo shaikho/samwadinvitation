@@ -180,7 +180,25 @@
         flip: Math.random() * 6.28, vf: .02 + Math.random() * .04,
         c: colors[(Math.random() * colors.length) | 0],
         a: opts.a ?? 0, life: opts.life ?? Infinity,
+        kind: opts.kind || 'petal', boom: !!opts.boom, r: 0,
       });
+      if (opts.c) list[list.length - 1].c = opts.c;
+    }
+    // a joyful explosion: a ring shockwave, then hearts, petals and gold sparks under gravity
+    function celebrate(x, y) {
+      const n = isSmall ? 70 : 110;
+      const hearts = ['#c9566b', '#e38a9b', '#b86f7e', '#f0b3bd'];
+      const golds = ['#f3d38a', '#e8c36e', '#fff1c7'];
+      list.push({ x, y, vx: 0, vy: 0, s: 0, rot: 0, vr: 0, flip: 0, vf: 0, c: '#d8b46a', a: 1, life: 70, kind: 'ring', boom: true, r: 6 });
+      for (let i = 0; i < n; i++) {
+        const ang = Math.random() * Math.PI * 2, sp = 3 + Math.random() * 7;
+        const roll = Math.random();
+        const kind = roll < .38 ? 'heart' : roll < .7 ? 'petal' : 'spark';
+        spawn({
+          x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 3, a: 1, life: 150 + Math.random() * 110, boom: true, kind,
+          c: kind === 'heart' ? hearts[(Math.random() * hearts.length) | 0] : kind === 'spark' ? golds[(Math.random() * golds.length) | 0] : undefined,
+        });
+      }
     }
     function burst(n, x, y) {
       for (let i = 0; i < n; i++) {
@@ -189,6 +207,40 @@
       }
     }
     function draw(p) {
+      if (p.kind === 'ring') {
+        ctx.save();
+        ctx.globalAlpha = p.a * .8;
+        ctx.strokeStyle = p.c;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+        return;
+      }
+      if (p.kind === 'spark') {
+        ctx.save();
+        ctx.globalAlpha = p.a * (.6 + .4 * Math.sin(p.flip * 3));
+        ctx.fillStyle = p.c;
+        ctx.shadowColor = p.c; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.s * .32, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        return;
+      }
+      if (p.kind === 'heart') {
+        const s = p.s * .75;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * .4);
+        ctx.scale(Math.cos(p.flip) * .5 + .7, 1);
+        ctx.globalAlpha = p.a;
+        ctx.fillStyle = p.c;
+        ctx.beginPath();
+        ctx.moveTo(0, s * .9);
+        ctx.bezierCurveTo(-s * 1.4, 0, -s * .8, -s * 1.1, 0, -s * .45);
+        ctx.bezierCurveTo(s * .8, -s * 1.1, s * 1.4, 0, 0, s * .9);
+        ctx.fill();
+        ctx.restore();
+        return;
+      }
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
@@ -222,9 +274,18 @@
       ctx.clearRect(0, 0, W, H);
       for (let i = list.length - 1; i >= 0; i--) {
         const p = list[i];
-        p.vy -= dy * .012;
-        p.vx += (wind + Math.sin(now / 1400 + p.flip) * .25 - p.vx) * .015 * dt;
-        p.vy += (.55 - p.vy) * .012 * dt;
+        if (p.kind === 'ring') {
+          p.r += 9 * dt;
+        } else if (p.boom) {
+          // explosion particles: air drag + gravity, then they settle into a gentle fall
+          p.vx *= Math.pow(.97, dt);
+          p.vy = p.vy * Math.pow(.97, dt) + .09 * dt;
+          if (p.vy > 2.2) p.vy = 2.2;
+        } else {
+          p.vy -= dy * .012;
+          p.vx += (wind + Math.sin(now / 1400 + p.flip) * .25 - p.vx) * .015 * dt;
+          p.vy += (.55 - p.vy) * .012 * dt;
+        }
         p.x += p.vx * dt; p.y += p.vy * dt;
         p.rot += p.vr * dt; p.flip += p.vf * dt;
         p.life -= dt;
@@ -248,7 +309,7 @@
     function scatter(n) {
       for (let i = 0; i < n; i++) spawn({ y: Math.random() * H, a: 1, vy: .05, vx: 0 });
     }
-    return { start, scatter, burst: reduced ? () => {} : burst };
+    return { start, scatter, burst: reduced ? () => {} : burst, celebrate: reduced ? () => {} : celebrate };
   })();
 
   // ---------------------------------------------------------------- little blue birds
@@ -531,7 +592,7 @@
         const icon = $('.tl-icon', item), text = $('.tl-text', item);
         animate(icon, { opacity: [0, 1], scale: [.6, 1], rotate: [-8 * side, 0] }, { type: 'spring', bounce: .4, duration: .9 });
         animate($$('.draw > *', icon), { strokeDashoffset: [1, 0] }, { duration: 1.4, delay: stagger(.12), ease: 'easeInOut' });
-        animate(text, { opacity: [0, 1], x: [40 * side * dir, 0] }, { duration: 1, delay: .15, ease: SMOOTH });
+        if (text) animate(text, { opacity: [0, 1], x: [40 * side * dir, 0] }, { duration: 1, delay: .15, ease: SMOOTH });
       }, { amount: .4 });
     });
 
@@ -681,50 +742,55 @@
   });
   $('#musicToggle').setAttribute('aria-pressed', 'false');
 
-  // ---------------------------------------------------------------- RSVP
-  const form = $('#rsvpForm'), msg = $('.form-msg', form), done = $('.rsvp-done');
+  // ---------------------------------------------------------------- private message to the couple
+  const form = $('#msgForm'), formMsg = $('.form-msg', form), done = $('.msg-done');
+  const nameIn = $('#guestName'), msgIn = $('#guestMsg');
+  msgIn.addEventListener('input', () => { $('#msgCount').textContent = msgIn.value.length; });
+  const shake = (el) => { animate(el, { x: [0, -8, 8, -5, 5, 0] }, { duration: .4 }); el.focus(); };
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const input = $('#guestName');
-    const name = input.value.trim();
-    msg.textContent = '';
-    if (!name) {
-      animate(input, { x: [0, -8, 8, -5, 5, 0] }, { duration: .4 });
-      input.focus();
-      return;
-    }
+    const name = nameIn.value.trim(), message = msgIn.value.trim();
+    formMsg.textContent = '';
+    if (!name) { formMsg.textContent = t('msg.needName'); return shake(nameIn); }
+    if (!message) { formMsg.textContent = t('msg.needMsg'); return shake(msgIn); }
     const btn = $('button', form), label = $('span', btn);
     btn.disabled = true;
-    label.textContent = t('rsvp.sending');
+    label.textContent = t('msg.sending');
     try {
-      const res = await fetch('/api/rsvp', {
+      const res = await fetch('/api/message', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, lang }),
+        body: JSON.stringify({
+          name, message, lang,
+          client: {
+            lang: navigator.language,
+            tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            screen: `${screen.width}×${screen.height} @${devicePixelRatio || 1}x`,
+            platform: navigator.userAgentData?.platform || navigator.platform || '',
+            touch: navigator.maxTouchPoints || 0,
+          },
+        }),
       });
       if (!res.ok) throw new Error(String(res.status));
-      $('.thanks', done).textContent = t('rsvp.thanks').replace('{name}', name);
-      animate(form, { opacity: [1, 0], y: [0, -10] }, { duration: .3 });
-      await wait(310);
-      form.hidden = true;
+
+      // celebrate from the middle of the form, then remove it and thank the guest
+      const r = form.getBoundingClientRect();
+      Petals.celebrate(r.left + r.width / 2, r.top + r.height / 2);
+      animate(form, { opacity: [1, 0], scale: [1, .92], filter: ['blur(0px)', 'blur(6px)'] }, { duration: .35, ease: 'easeIn' });
+      await wait(360);
+      form.remove();
+      $('.thanks', done).textContent = t('msg.thanks').replace('{name}', name);
       done.hidden = false;
-      animate(done, { opacity: [0, 1], scale: [.9, 1] }, { type: 'spring', bounce: .4, duration: .7 });
-      const r = $('.thanks', done).getBoundingClientRect();
-      Petals.burst(isSmall ? 30 : 50, r.left + r.width / 2, r.top + r.height / 2);
+      animate($('.msg-done-heart', done), { scale: [0, 1.25, 1], rotate: [-20, 8, 0] }, { duration: .9, ease: [0.34, 1.56, 0.64, 1] });
+      animate($$('.thanks, .thanks-sub', done), { opacity: [0, 1], y: [16, 0] }, { delay: stagger(.15, { startDelay: .25 }), duration: .8, ease: EASE });
+      setTimeout(() => { const d = done.getBoundingClientRect(); Petals.celebrate(d.left + d.width / 2, d.top + 30); }, 900);
       flock(4);
-      input.value = '';
     } catch {
-      msg.textContent = t('rsvp.error');
-    } finally {
+      formMsg.textContent = t('msg.error');
       btn.disabled = false;
-      label.textContent = t('rsvp.submit');
+      label.textContent = t('msg.send');
     }
-  });
-  $('#rsvpAgain').addEventListener('click', () => {
-    done.hidden = true;
-    form.hidden = false;
-    animate(form, { opacity: [0, 1], y: [10, 0] }, { duration: .4 });
-    $('#guestName').focus();
   });
 
   applyLang();
