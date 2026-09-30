@@ -134,8 +134,21 @@
   addEventListener('resize', measureScroll);
   if (window.ResizeObserver) new ResizeObserver(measureScroll).observe(document.body);
 
+  // Performance: this runs every frame, so it only touches elements that are on screen and only
+  // writes a transform when the (rounded) value actually changed. The idle drift is for mouse devices.
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  const onScreen = new Set();
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => (e.isIntersecting ? onScreen.add(e.target) : onScreen.delete(e.target))));
+    tilters.forEach((el) => io.observe(el));
+  } else {
+    tilters.forEach((el) => onScreen.add(el));
+  }
+  const written = new WeakMap();
+  const setTransform = (el, v) => { if (written.get(el) !== v) { el.style.transform = v; written.set(el, v); } };
+
   function tiltLoop(now) {
-    const idle = tilt.hasGyro ? 0 : 0.12;
+    const idle = tilt.hasGyro || isTouch ? 0 : 0.12;
     const tx = tilt.tx + Math.sin(now / 3100) * idle;
     const ty = tilt.ty + Math.cos(now / 3700) * idle;
     tilt.x += (tx - tilt.x) * 0.06;
@@ -143,13 +156,13 @@
     const sy = scrollY / maxScroll;
 
     for (const { el, d } of layers) {
-      el.style.transform = `translate3d(${(-tilt.x * 34 * d).toFixed(2)}px, ${(-tilt.y * 34 * d - sy * 120 * d).toFixed(2)}px, 0) rotateX(${(tilt.y * 4).toFixed(2)}deg) rotateY(${(-tilt.x * 4).toFixed(2)}deg)`;
+      setTransform(el, `translate3d(${(-tilt.x * 34 * d).toFixed(1)}px, ${(-tilt.y * 34 * d - sy * 120 * d).toFixed(1)}px, 0) rotateX(${(tilt.y * 4).toFixed(1)}deg) rotateY(${(-tilt.x * 4).toFixed(1)}deg)`);
     }
-    for (const el of tilters) {
-      el.style.transform = `perspective(1100px) rotateY(${(tilt.x * 7).toFixed(2)}deg) rotateX(${(-tilt.y * 7).toFixed(2)}deg)`;
+    for (const el of onScreen) {
+      setTransform(el, `perspective(1100px) rotateY(${(tilt.x * 7).toFixed(1)}deg) rotateX(${(-tilt.y * 7).toFixed(1)}deg)`);
     }
     // clouds shift a little with the phone's tilt (3D depth)
-    sky.style.transform = `translate3d(${(-tilt.x * 18).toFixed(2)}px, ${(-tilt.y * 10).toFixed(2)}px, 0)`;
+    setTransform(sky, `translate3d(${(-tilt.x * 18).toFixed(1)}px, ${(-tilt.y * 10).toFixed(1)}px, 0)`);
     requestAnimationFrame(tiltLoop);
   }
   if (!reduced) requestAnimationFrame(tiltLoop);
@@ -220,7 +233,7 @@
     const ambient = isSmall ? 9 : 16;
 
     function resize() {
-      dpr = Math.min(2, devicePixelRatio || 1);
+      dpr = isSmall ? 1 : Math.min(2, devicePixelRatio || 1);
       W = innerWidth; H = innerHeight;
       cv.width = W * dpr; cv.height = H * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -241,7 +254,9 @@
       if (opts.c) list[list.length - 1].c = opts.c;
     }
     // a joyful explosion: a ring shockwave, then hearts, petals and gold sparks under gravity
-    function celebrate(x, y) {
+    // wrapped sweets (حلاوة) thrown at the jertig: [candy colour, wrapper colour]
+    const sweets = [['#d4202a', '#f2c14e'], ['#f2c14e', '#d4202a'], ['#e6417a', '#ffd3df'], ['#1f8a57', '#f2c14e'], ['#d9dbe6', '#f2c14e'], ['#ff8a1f', '#fff1c7']];
+    function celebrate(x, y, opts = {}) {
       const n = isSmall ? 55 : 85;
       const hearts = ['#c9566b', '#e38a9b', '#b86f7e', '#f0b3bd'];
       const golds = ['#f3d38a', '#e8c36e', '#fff1c7'];
@@ -254,6 +269,18 @@
           x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 3, a: 1, life: 150 + Math.random() * 110, boom: true, kind,
           c: kind === 'heart' ? hearts[(Math.random() * hearts.length) | 0] : kind === 'spark' ? golds[(Math.random() * golds.length) | 0] : undefined,
         });
+      }
+      if (opts.candies) {
+        const m = isSmall ? 45 : 70; // plenty of sweets
+        for (let i = 0; i < m; i++) {
+          const ang = Math.random() * Math.PI * 2, sp = 3.5 + Math.random() * 6.5;
+          const [c, c2] = sweets[(Math.random() * sweets.length) | 0];
+          spawn({ x, y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 4, a: 1, life: 170 + Math.random() * 110, boom: true, kind: 'candy', c });
+          const p = list[list.length - 1];
+          p.c2 = c2;
+          p.s = 8 + Math.random() * 4.5;
+          p.vr = (Math.random() - .5) * .35; // they tumble as they fly
+        }
       }
     }
     function burst(n, x, y) {
@@ -279,6 +306,39 @@
         ctx.beginPath(); ctx.arc(p.x, p.y, p.s * .32, 0, Math.PI * 2); ctx.fill();
         ctx.globalAlpha *= .25;
         ctx.beginPath(); ctx.arc(p.x, p.y, p.s * .75, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        return;
+      }
+      if (p.kind === 'candy') {
+        const s = p.s;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.scale(1, Math.cos(p.flip) * .35 + .75); // a little 3D wobble
+        ctx.globalAlpha = p.a;
+        // twisted wrapper ends
+        ctx.fillStyle = p.c2;
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(side * s * .5, 0);
+          ctx.lineTo(side * s * 1.12, -s * .46);
+          ctx.quadraticCurveTo(side * s * .98, 0, side * s * 1.12, s * .46);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // the sweet
+        ctx.fillStyle = p.c;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, s * .62, s * .44, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // stripe and shine
+        ctx.globalAlpha = p.a * .55;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = s * .12;
+        ctx.beginPath(); ctx.moveTo(-s * .25, s * .36); ctx.lineTo(s * .18, -s * .38); ctx.stroke();
+        ctx.globalAlpha = p.a * .6;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.ellipse(-s * .28, -s * .16, s * .14, s * .08, -.5, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
         return;
       }
@@ -642,12 +702,12 @@
     const line = $('.tl-line');
     let lineH = line.offsetHeight;
     addEventListener('resize', () => { lineH = line.offsetHeight; });
-    // Jertig theme: switches on when the pearl reaches the jertig icon, off again above it
-    const jertigItem = $('[data-icon="jertig"]').closest('.tl-item');
+    // Jertig theme: switches on right after the pearl leaves the zaffa (الزفّة, 10:00 PM),
+    // i.e. as it passes the bottom of that item, and off again when scrolling back above it
+    const zaffaItem = $('[data-icon="zaffa"]').closest('.tl-item');
     let jertigAt = 0;
     const measureJertig = () => {
-      const icon = $('.tl-icon', jertigItem);
-      jertigAt = (jertigItem.offsetTop + icon.offsetTop + icon.offsetHeight / 2) - line.offsetTop;
+      jertigAt = (zaffaItem.offsetTop + zaffaItem.offsetHeight) - line.offsetTop;
     };
     measureJertig();
     addEventListener('resize', measureJertig);
@@ -658,10 +718,11 @@
       jertigOn = on;
       document.documentElement.classList.toggle('theme-jertig', on);
       Petals.setPalette(on ? 'jertig' : 'garden');
-      if (themeMeta) themeMeta.content = on ? '#8a1117' : '#f4eee3';
+      if (themeMeta) themeMeta.content = on ? '#8a1117' : '#e7dce6';
       if (on) {
-        const r = $('.tl-icon', jertigItem).getBoundingClientRect();
-        Petals.celebrate(r.left + r.width / 2, r.top + r.height / 2);
+        // the celebration bursts from the pearl, right where the switch happens
+        const r = pearlDot.getBoundingClientRect();
+        Petals.celebrate(r.left + r.width / 2, r.top + r.height / 2, { candies: true });
       }
     }
 
@@ -893,6 +954,8 @@
       document.documentElement.classList.add('theme-jertig');
       Petals.setPalette('jertig');
     }
+    // &burst=1 previews the theme-switch explosion (with the wrapped sweets)
+    if (new URLSearchParams(location.search).get('burst')) setTimeout(() => Petals.celebrate(innerWidth / 2, innerHeight / 2, { candies: true }), 600);
     $('.gate').remove();
     document.body.classList.remove('is-locked');
     // final states only (CSS .snapshot rules) so the capture never lands mid-animation
