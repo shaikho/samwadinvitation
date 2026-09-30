@@ -126,10 +126,11 @@
 
     // scalloped lace edge behind the card
     s += '<g>';
-    for (let x = L; x <= R; x += 11) s += `<circle cx="${x}" cy="${T}" r="5.5" fill="${C.cream}" stroke="${C.creamEdge}" stroke-width=".6"/><circle cx="${x}" cy="${B}" r="5.5" fill="${C.cream}" stroke="${C.creamEdge}" stroke-width=".6"/>`;
-    for (let y = T; y <= B; y += 11) s += `<circle cx="${L}" cy="${y}" r="5.5" fill="${C.cream}" stroke="${C.creamEdge}" stroke-width=".6"/><circle cx="${R}" cy="${y}" r="5.5" fill="${C.cream}" stroke="${C.creamEdge}" stroke-width=".6"/>`;
+    const lace = '#fbf7fa', laceEdge = '#dfcddb'; // lavender-cream lace to match the site palette
+    for (let x = L; x <= R; x += 11) s += `<circle cx="${x}" cy="${T}" r="5.5" fill="${lace}" stroke="${laceEdge}" stroke-width=".6"/><circle cx="${x}" cy="${B}" r="5.5" fill="${lace}" stroke="${laceEdge}" stroke-width=".6"/>`;
+    for (let y = T; y <= B; y += 11) s += `<circle cx="${L}" cy="${y}" r="5.5" fill="${lace}" stroke="${laceEdge}" stroke-width=".6"/><circle cx="${R}" cy="${y}" r="5.5" fill="${lace}" stroke="${laceEdge}" stroke-width=".6"/>`;
     s += '</g>';
-    s += `<rect x="${L}" y="${T}" width="${R - L}" height="${B - T}" fill="url(#linen)"/>`;
+    s += `<rect x="${L}" y="${T}" width="${R - L}" height="${B - T}" fill="url(#linenLav)"/>`;
     s += `<rect x="${L + 9}" y="${T + 9}" width="${R - L - 18}" height="${B - T - 18}" fill="none" stroke="${C.gold}" stroke-width=".8" stroke-dasharray="1 2.6" opacity=".8"/>`;
     s += `<rect x="${L + 14}" y="${T + 14}" width="${R - L - 28}" height="${B - T - 28}" fill="none" stroke="${C.creamEdge}" stroke-width=".6"/>`;
 
@@ -203,6 +204,9 @@
     <pattern id="linen" width="6" height="6" patternUnits="userSpaceOnUse">
       <rect width="6" height="6" fill="#f7f1e6"/><path d="M0 1.5H6M0 4.5H6" stroke="#ebe2d1" stroke-width=".7"/><path d="M1.5 0V6M4.5 0V6" stroke="#efe7d8" stroke-width=".5"/>
     </pattern>
+    <pattern id="linenLav" width="6" height="6" patternUnits="userSpaceOnUse">
+      <rect width="6" height="6" fill="#f8f2f6"/><path d="M0 1.5H6M0 4.5H6" stroke="#ece0e9" stroke-width=".7"/><path d="M1.5 0V6M4.5 0V6" stroke="#f0e6ee" stroke-width=".5"/>
+    </pattern>
     <radialGradient id="pearl" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#f1e9df"/><stop offset="1" stop-color="#cfc1b0"/></radialGradient>
   </defs>`;
   function asImage(svg, cls = '') {
@@ -214,9 +218,9 @@
   }
 
   // ---------- Floral arch (Our Story) ----------
-  function arch() {
+  function arch(H = 660) {
     const r = rng(1020);
-    const cx = 200, cy = 250, rad = 145, top = cy, bottom = 620;
+    const cx = 200, cy = 250, rad = 145, top = cy, bottom = H - 40;
     const pts = [];
     for (let y = bottom; y >= top; y -= 10) pts.push([cx - rad, y]);
     for (let a = 180; a >= 0; a -= 4) pts.push([cx + Math.cos((a * Math.PI) / 180) * rad, cy - Math.sin((a * Math.PI) / 180) * rad]);
@@ -224,7 +228,7 @@
     // make it a little organic
     const organic = pts.map(([x, y], i) => [x + Math.sin(i * .7) * 3, y + Math.cos(i * .5) * 2]);
 
-    let s = '<svg viewBox="0 0 400 660" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g filter="url(#emb)">';
+    let s = `<svg viewBox="0 0 400 ${H}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><g filter="url(#emb)">`;
     s += vineAlong(organic, r, { leafEvery: 1, leafSize: 15, width: 2 });
     // inner second vine for fullness
     s += vineAlong(organic.map(([x, y]) => [x + (x < cx ? 6 : -6), y + 4]), r, { leafEvery: 2, leafSize: 11, width: 1 });
@@ -517,6 +521,7 @@
   window.Art = {
     frame: () => asImage(frame(), 'art-img') + frameThreads(),
     arch: () => asImage(arch(), 'art-img'),
+    archTall: () => asImage(arch(1080), 'art-img'),
     bouquet: () => asImage(cornerBouquet(5), 'art-img'),
     bouquetAlt: () => asImage(cornerBouquet(12), 'art-img'),
     garland: () => asImage(sideGarland(9), 'art-img'),
