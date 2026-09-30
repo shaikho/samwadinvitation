@@ -521,7 +521,7 @@
   window.Art = {
     frame: () => asImage(frame(), 'art-img') + frameThreads(),
     arch: () => asImage(arch(), 'art-img'),
-    archTall: () => asImage(arch(1080), 'art-img'),
+    archTall: () => asImage(arch(910), 'art-img'),
     bouquet: () => asImage(cornerBouquet(5), 'art-img'),
     bouquetAlt: () => asImage(cornerBouquet(12), 'art-img'),
     garland: () => asImage(sideGarland(9), 'art-img'),

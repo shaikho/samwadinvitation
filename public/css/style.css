@@ -516,14 +516,14 @@ main { position: relative; z-index: 2; }
 .arch {
   position: relative;
   width: min(100%, 480px);
-  aspect-ratio: 400 / 1080; /* the taller arch: longer legs frame the whole story */
+  aspect-ratio: 400 / 910; /* the taller arch: longer legs frame the whole story */
   container-type: inline-size;
   transform-style: preserve-3d;
 }
 .arch-art, .arch-art > * { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .tilt { will-change: transform; }
 .arch-content {
-  position: absolute; left: 19%; right: 19%; top: 23%; bottom: 8%;
+  position: absolute; left: 19%; right: 19%; top: 24%; bottom: 8%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   transform: translateZ(30px);
 }
