@@ -60,11 +60,11 @@ The wedding time, the venue coordinates and the calendar event are in `public/js
 ## Link preview (WhatsApp / X / iMessage / Telegram)
 
 Pasting the link shows the invitation card: the logo in its wreath, both names, the date, the doors-open time and the venue in Arabic and English, framed by the bridal-bouquet flowers. A short bilingual title and description go with it.
-- The image is `public/og-invitation.jpg` (1200×630, about 100 KB), rendered from `public/share-card.html`.
+- The image is `public/og-invitation-2.jpg` (1200×630, about 100 KB), rendered from `public/share-card.html`.
 - To regenerate it after editing the card: run `npm start`, then `npm run og` (needs Edge or Chrome). `npm run og -- hero` captures the welcome screen instead.
 - The title, description and image are the `og:*`, `itemprop` and `twitter:*` tags at the top of `public/index.html`. They use absolute `https://samwadinvitation.vercel.app` URLs; update them if the domain changes.
 - WhatsApp's rules: the tags must be in the first 300 KB of the page, the image under 600 KB and at least 300px wide, and the description is best kept to about 80 characters.
-- WhatsApp caches previews (including "no preview") per URL for days. When the card changes, render it under a new name (`OG_NAME=og-invitation-2.jpg npm run og`) and update the meta tags. To test, paste a URL WhatsApp hasn't seen before, e.g. `https://samwadinvitation.vercel.app/?w=1`, and wait up to 10 seconds.
+- WhatsApp caches previews (including "no preview") per URL for days. When the card changes, render it under a new name (`OG_NAME=og-invitation-3.jpg npm run og`) and update the meta tags. To test, paste a URL WhatsApp hasn't seen before, e.g. `https://samwadinvitation.vercel.app/?w=1`, and wait up to 10 seconds.
 
 ## Logo
 

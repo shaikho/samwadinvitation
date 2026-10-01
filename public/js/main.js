@@ -230,7 +230,7 @@
     let colors = palettes.garden;
     const list = [];
     let W = 0, H = 0, dpr = 1, lastY = scrollY, last = performance.now();
-    const ambient = isSmall ? 9 : 16;
+    const ambient = isSmall ? 5 : 10;
 
     function resize() {
       dpr = isSmall ? 1 : Math.min(2, devicePixelRatio || 1);
@@ -257,7 +257,7 @@
     // wrapped sweets (حلاوة) thrown at the jertig: [candy colour, wrapper colour]
     const sweets = [['#d4202a', '#f2c14e'], ['#f2c14e', '#d4202a'], ['#e6417a', '#ffd3df'], ['#1f8a57', '#f2c14e'], ['#d9dbe6', '#f2c14e'], ['#ff8a1f', '#fff1c7']];
     function celebrate(x, y, opts = {}) {
-      const n = isSmall ? 55 : 85;
+      const n = isSmall ? 33 : 51;
       const hearts = ['#c9566b', '#e38a9b', '#b86f7e', '#f0b3bd'];
       const golds = ['#f3d38a', '#e8c36e', '#fff1c7'];
       list.push({ x, y, vx: 0, vy: 0, s: 0, rot: 0, vr: 0, flip: 0, vf: 0, c: '#d8b46a', a: 1, life: 70, kind: 'ring', boom: true, r: 6 });
@@ -271,7 +271,7 @@
         });
       }
       if (opts.candies) {
-        const m = isSmall ? 45 : 70; // plenty of sweets
+        const m = isSmall ? 27 : 42; // plenty of sweets
         for (let i = 0; i < m; i++) {
           const ang = Math.random() * Math.PI * 2, sp = 3.5 + Math.random() * 6.5;
           const [c, c2] = sweets[(Math.random() * sweets.length) | 0];
@@ -382,7 +382,7 @@
       const dy = clamp(scrollY - lastY, -40, 40); // ignore jumps (anchor links, restores)
       lastY = scrollY;
       // page movement stirs the petals
-      if (Math.abs(dy) > 5 && list.length < 60 && Math.random() < .5) {
+      if (Math.abs(dy) > 5 && list.length < 36 && Math.random() < .3) {
         const n = Math.min(2, Math.floor(Math.abs(dy) / 20) + 1);
         for (let i = 0; i < n; i++) spawn({ y: dy > 0 ? H + 10 : -10, vy: dy > 0 ? -2 - Math.random() * 2 : 2, a: 0, life: 320 });
       }
@@ -666,7 +666,7 @@
       const art = $('.frame-art', frame);
       animate(art, { opacity: [0, 1], scale: [.94, 1], y: [50, 0] }, { duration: 1.4, ease: SMOOTH });
       animate($$('.frame-content > *', frame), { opacity: [0, 1], y: [18, 0] }, { delay: stagger(.08, { startDelay: .45 }), duration: 1, ease: SMOOTH });
-      Petals.burst(isSmall ? 14 : 22, innerWidth / 2, innerHeight * .35);
+      Petals.burst(isSmall ? 8 : 13, innerWidth / 2, innerHeight * .35);
     }, { amount: .25 });
 
     // story arch
@@ -862,7 +862,7 @@
       animate($('.letter-inner', letter), { opacity: [1, 1, 0] }, { duration: .9, times: [0, .45, 1], ease: 'easeIn' });
       animate(letter, { x: [0, dx], y: [slideY, slideY + dy], scale: [1, scale], borderRadius: ['4px', '0px'] },
         { duration: 1.25, ease: [0.45, 0, 0.2, 1] });
-      Petals.burst(isSmall ? 26 : 40, innerWidth / 2, innerHeight / 2);
+      Petals.burst(isSmall ? 16 : 24, innerWidth / 2, innerHeight / 2);
     }, T_GROW);
 
     // 5 · the letter has become the page: fade the gate away over the live site
@@ -960,7 +960,7 @@
     document.body.classList.remove('is-locked');
     // final states only (CSS .snapshot rules) so the capture never lands mid-animation
     Petals.start();
-    Petals.scatter(38);
+    Petals.scatter(23);
     const target = snapshotAt && document.getElementById(snapshotAt);
     if (target) {
       // show only that section (headless screenshots don't capture scrolled pages reliably)
